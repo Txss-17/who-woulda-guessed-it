@@ -1,4 +1,3 @@
-
 import { CircleDot, Sparkles, Stars, Grid, Palette } from 'lucide-react';
 
 interface DecorationProps {

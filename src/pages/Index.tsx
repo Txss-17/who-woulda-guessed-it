@@ -12,7 +12,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import GameCard from '@/components/GameCard';
-import { Blob, BackgroundDecoration, PatternBackground } from '@/components/DecorativeElements';
+import { Blob, BackgroundDecoration, PatternBackground, FloatingElements } from '@/components/DecorativeElements';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -37,6 +37,7 @@ const Index = () => {
   return (
     <div className="relative min-h-screen bg-background overflow-hidden">
       <PatternBackground />
+      <FloatingElements />
       <Blob color="primary" position="top-right" size="lg" className="-mt-20 -mr-20 opacity-30" />
       <Blob color="accent" position="bottom-left" size="lg" className="-mb-20 -ml-20 opacity-30" />
       
@@ -59,7 +60,11 @@ const Index = () => {
         <section className="max-w-3xl mx-auto mb-16">
           <div className="text-center relative">
             <div className="absolute -top-16 right-0 text-yellow-300 hidden md:block">
-              <img src="/lovable-uploads/e68db015-66ed-46a4-8499-41b3a5896ccd.png" alt="Decorative stars" className="w-32 h-32 object-contain" />
+              <div className="h-32 w-32 animate-float-slow">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              </div>
             </div>
             
             <h2 className="text-3xl sm:text-5xl font-bold mb-6 leading-tight">
@@ -70,12 +75,21 @@ const Index = () => {
               <div className="w-32 h-32 relative">
                 <div className="absolute inset-0 bg-primary/10 rounded-lg transform -rotate-6"></div>
                 <div className="absolute inset-0 bg-primary/20 rounded-lg transform rotate-3"></div>
-                <div className="relative bg-white/80 border-2 border-primary/20 rounded-lg p-3 transform rotate-2 shadow-lg">
-                  <img 
-                    src="/lovable-uploads/e68db015-66ed-46a4-8499-41b3a5896ccd.png" 
-                    alt="Liste de questions" 
-                    className="w-full h-full object-contain"
-                  />
+                <div className="relative bg-white/80 border-2 border-primary/20 rounded-lg p-3 transform rotate-2 shadow-lg overflow-hidden">
+                  <div className="flex items-end justify-center h-full">
+                    <div className="w-10 h-16 bg-blue-400 rounded-full relative mr-1">
+                      <div className="absolute bottom-full w-8 h-8 bg-blue-400 rounded-full left-1/2 transform -translate-x-1/2"></div>
+                      <div className="absolute top-1/4 left-1/2 w-5 h-2 bg-white rounded-full transform -translate-x-1/2"></div>
+                    </div>
+                    <div className="w-10 h-14 bg-pink-400 rounded-full relative ml-1">
+                      <div className="absolute bottom-full w-8 h-8 bg-pink-400 rounded-full left-1/2 transform -translate-x-1/2"></div>
+                      <div className="absolute top-1/4 left-1/2 w-5 h-2 bg-white rounded-full transform -translate-x-1/2"></div>
+                    </div>
+                    <div className="w-10 h-12 bg-yellow-400 rounded-full relative ml-1">
+                      <div className="absolute bottom-full w-8 h-8 bg-yellow-400 rounded-full left-1/2 transform -translate-x-1/2"></div>
+                      <div className="absolute top-1/4 left-1/2 w-5 h-2 bg-white rounded-full transform -translate-x-1/2"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -116,12 +130,12 @@ const Index = () => {
           <h3 className="text-2xl sm:text-3xl font-bold mb-8 flex items-center">
             Choisis ton mode de jeu
             <div className="ml-4 relative">
-              <div className="absolute -top-4 -right-12">
-                <img 
-                  src="/lovable-uploads/e68db015-66ed-46a4-8499-41b3a5896ccd.png" 
-                  alt="Decorative elements" 
-                  className="w-16 h-16 object-contain" 
-                />
+              <div className="absolute -top-4 -right-12 animate-float">
+                <div className="w-16 h-16 text-accent">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
+                    <path d="M12 2L9.5 8.5H3L8.5 12.5L6 19L12 15L18 19L15.5 12.5L21 8.5H14.5L12 2Z" />
+                  </svg>
+                </div>
               </div>
             </div>
           </h3>
