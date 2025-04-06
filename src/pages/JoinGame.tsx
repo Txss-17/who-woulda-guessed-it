@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ChevronLeft, Users, UserCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Blob, BackgroundDecoration } from '@/components/DecorativeElements';
 
 const JoinGame = () => {
   const { gameCode } = useParams();
@@ -75,8 +76,12 @@ const JoinGame = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4">
-      <div className="container mx-auto max-w-md">
+    <div className="relative min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4 overflow-hidden">
+      <Blob color="primary" position="top-left" size="md" className="opacity-40" />
+      <Blob color="accent" position="bottom-right" size="md" className="opacity-40" />
+      <BackgroundDecoration variant="minimal" position="bottom-left" className="opacity-30" />
+      
+      <div className="container mx-auto max-w-md relative z-10">
         <Button 
           variant="ghost" 
           onClick={() => navigate('/')}
@@ -85,7 +90,9 @@ const JoinGame = () => {
           <ChevronLeft className="mr-2 h-4 w-4" /> Retour
         </Button>
         
-        <Card className="p-6 shadow-lg">
+        <Card className="p-6 shadow-lg relative overflow-hidden">
+          <BackgroundDecoration variant="minimal" position="bottom-right" className="opacity-10" />
+          
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold mb-2">Rejoindre la partie</h1>
             <div className="inline-flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full">

@@ -11,6 +11,7 @@ import {
   Menu
 } from 'lucide-react';
 import GameCard from '@/components/GameCard';
+import { Blob, BackgroundDecoration, PatternBackground } from '@/components/DecorativeElements';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -33,8 +34,12 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30">
-      <header className="container mx-auto py-6 flex justify-between items-center">
+    <div className="relative min-h-screen bg-gradient-to-b from-background to-secondary/30 overflow-hidden">
+      <Blob color="primary" position="top-right" size="lg" className="-mt-20 -mr-20" />
+      <Blob color="accent" position="bottom-left" size="lg" className="-mb-20 -ml-20" />
+      <PatternBackground />
+      
+      <header className="container mx-auto py-6 flex justify-between items-center relative z-10">
         <div className="flex items-center gap-2">
           <Users className="text-primary h-8 w-8" />
           <h1 className="text-2xl font-bold gradient-text">Who's Most Likely?</h1>
@@ -44,27 +49,32 @@ const Index = () => {
         </Button>
       </header>
 
-      <main className="container mx-auto px-4 pt-8 pb-20">
+      <main className="container mx-auto px-4 pt-8 pb-20 relative z-10">
         <section className="max-w-2xl mx-auto text-center mb-12">
-          <h2 className="text-4xl font-bold mb-3">
-            Le jeu social du <span className="gradient-text">Qui est le plus susceptible de...</span>
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8">
-            Joue en ligne ou IRL, crée tes questions, vote anonymement et découvre ce que tes amis pensent vraiment de toi !
-          </p>
+          <BackgroundDecoration variant="primary" position="top-right" className="hidden md:block" />
+          
+          <div className="relative animate-fade-in">
+            <h2 className="text-4xl font-bold mb-3">
+              Le jeu social du <span className="gradient-text">Qui est le plus susceptible de...</span>
+            </h2>
+            <p className="text-xl text-muted-foreground mb-8">
+              Joue en ligne ou IRL, crée tes questions, vote anonymement et découvre ce que tes amis pensent vraiment de toi !
+            </p>
 
-          <div className="bg-card rounded-xl p-6 shadow-lg mb-12">
-            <form onSubmit={handleJoinGame} className="flex flex-col sm:flex-row gap-2">
-              <Input
-                placeholder="Entre un code de partie"
-                value={gameCode}
-                onChange={(e) => setGameCode(e.target.value)}
-                className="text-center sm:text-left"
-              />
-              <Button type="submit" className="whitespace-nowrap">
-                Rejoindre
-              </Button>
-            </form>
+            <div className="bg-card rounded-xl p-6 shadow-lg mb-12 relative overflow-hidden">
+              <BackgroundDecoration variant="minimal" position="bottom-right" className="opacity-20" />
+              <form onSubmit={handleJoinGame} className="flex flex-col sm:flex-row gap-2">
+                <Input
+                  placeholder="Entre un code de partie"
+                  value={gameCode}
+                  onChange={(e) => setGameCode(e.target.value)}
+                  className="text-center sm:text-left"
+                />
+                <Button type="submit" className="whitespace-nowrap">
+                  Rejoindre
+                </Button>
+              </form>
+            </div>
           </div>
         </section>
 
@@ -103,7 +113,7 @@ const Index = () => {
         </section>
       </main>
 
-      <footer className="bg-background border-t py-6">
+      <footer className="bg-background border-t py-6 relative z-10">
         <div className="container mx-auto text-center text-muted-foreground text-sm">
           © 2025 Who's Most Likely? - Le jeu social ultime entre amis
         </div>
