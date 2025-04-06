@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import QuestionCard from '@/components/QuestionCard';
 import PlayerAvatar from '@/components/PlayerAvatar';
 import Confetti from '@/components/Confetti';
-import { useToast } from '@/components/ui/toast';
+import { useToast } from '@/hooks/use-toast';
 import { 
   ArrowRight, 
   ChevronLeft, 
@@ -38,7 +37,6 @@ const PlayGame = () => {
   const [gameOver, setGameOver] = useState(false);
   
   useEffect(() => {
-    // Récupérer les données du jeu depuis sessionStorage
     const storedGameData = sessionStorage.getItem('gameData');
     if (storedGameData) {
       setGameData(JSON.parse(storedGameData));
@@ -63,21 +61,17 @@ const PlayGame = () => {
     
     setVotingPhase(false);
     
-    // Simuler des votes aléatoires des autres joueurs
     const newVotes: Record<number, number> = {};
     
     if (gameData) {
       gameData.players.forEach(player => {
-        // Ajouter entre 0 et 3 votes pour chaque joueur de manière aléatoire
         newVotes[player.id] = Math.floor(Math.random() * 4);
       });
       
-      // Ajouter le vote du joueur actuel
       newVotes[selectedPlayer.id] = (newVotes[selectedPlayer.id] || 0) + 1;
       
       setVotes(newVotes);
       
-      // Afficher les confettis pour le joueur qui a le plus de votes
       setTimeout(() => {
         setShowConfetti(true);
       }, 2000);
@@ -138,7 +132,6 @@ const PlayGame = () => {
             <div className="flex justify-center gap-3">
               <Button onClick={() => navigate('/')}>Accueil</Button>
               <Button variant="outline" onClick={() => {
-                // Créer une nouvelle partie avec le même groupe
                 const newGameCode = Math.random().toString(36).substring(2, 8).toUpperCase();
                 navigate(`/create-game/${newGameCode}`);
               }}>
