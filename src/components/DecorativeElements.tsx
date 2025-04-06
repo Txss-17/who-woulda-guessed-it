@@ -1,5 +1,4 @@
-
-import { CircleDot, Sparkles, Stars, DotPattern, Palette } from 'lucide-react';
+import { CircleDot, Sparkles, Stars, Grid, Palette } from 'lucide-react';
 
 interface DecorationProps {
   variant?: 'primary' | 'accent' | 'minimal';
@@ -42,7 +41,7 @@ export const BackgroundDecoration = ({
       )}
       
       {variant === 'minimal' && (
-        <DotPattern className="h-20 w-20 opacity-15" />
+        <Grid className="h-20 w-20 opacity-15" />
       )}
     </div>
   );
