@@ -1,3 +1,4 @@
+
 import { CircleDot, Sparkles, Stars, Grid, Palette } from 'lucide-react';
 
 interface DecorationProps {
@@ -103,6 +104,38 @@ export const PatternBackground = ({ className = '' }: { className?: string }) =>
         </defs>
         <rect width="100%" height="100%" fill="url(#dots)" />
       </svg>
+    </div>
+  );
+};
+
+export const FloatingElements = ({ className = '' }: { className?: string }) => {
+  return (
+    <div className={`absolute inset-0 -z-10 pointer-events-none ${className}`}>
+      <div className="absolute top-1/4 right-1/6 animate-float-slow">
+        <div className="w-8 h-8 text-yellow-300">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+        </div>
+      </div>
+      <div className="absolute top-2/3 left-1/5 animate-float">
+        <div className="w-6 h-6 text-purple-300">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L9.5 8.5H3L8.5 12.5L6 19L12 15L18 19L15.5 12.5L21 8.5H14.5L12 2Z" />
+          </svg>
+        </div>
+      </div>
+      <div className="absolute top-1/3 right-1/4 animate-float-slow">
+        <div className="w-4 h-4 rounded-full bg-accent/30"></div>
+      </div>
+      <div className="absolute bottom-1/4 right-1/3 animate-float">
+        <div className="w-10 h-10 text-primary/20">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="10" />
+            <circle cx="12" cy="12" r="4" fill="white" />
+          </svg>
+        </div>
+      </div>
     </div>
   );
 };

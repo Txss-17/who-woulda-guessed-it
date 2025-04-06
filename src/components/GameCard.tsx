@@ -1,32 +1,42 @@
 
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { ChevronRight } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 interface GameCardProps {
   title: string;
   description: string;
   icon: React.ReactNode;
   onClick: () => void;
+  rightIcon?: React.ReactNode;
+  className?: string;
 }
 
-const GameCard = ({ title, description, icon, onClick }: GameCardProps) => {
+const GameCard = ({ 
+  title, 
+  description, 
+  icon, 
+  onClick,
+  rightIcon,
+  className 
+}: GameCardProps) => {
   return (
-    <Card className="card-gradient relative overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300"
+    <Card 
+      className={cn(
+        "relative overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300 border-2 border-primary/10",
+        className
+      )}
       onClick={onClick}
     >
-      <div className="p-6">
+      <div className="absolute inset-0 bg-gradient-to-br from-white to-secondary/30 opacity-80 z-0" />
+      <div className="p-6 relative z-10">
         <div className="flex items-center justify-between mb-4">
           <div className="bg-primary/20 p-3 rounded-full text-primary">
             {icon}
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            {rightIcon || <ChevronRight className="h-5 w-5" />}
+          </div>
         </div>
         
         <h3 className="text-xl font-bold mb-2">{title}</h3>
