@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   ArrowRight, 
   ChevronLeft, 
-  Users
+  Users,
+  Sparkles
 } from 'lucide-react';
 
 interface Player {
@@ -21,6 +23,7 @@ interface GameData {
   gameCode: string;
   players: Player[];
   questions: string[];
+  aiGenerated?: boolean;
 }
 
 const PlayGame = () => {
@@ -175,7 +178,10 @@ const PlayGame = () => {
         </div>
         
         <div className="mb-8">
-          <QuestionCard question={currentQuestion} />
+          <QuestionCard 
+            question={currentQuestion} 
+            isAIGenerated={gameData.aiGenerated}
+          />
         </div>
         
         {votingPhase ? (

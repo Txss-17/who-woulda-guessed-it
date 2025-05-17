@@ -6,9 +6,10 @@ import { Sparkles } from 'lucide-react';
 interface QuestionCardProps {
   question: string;
   isRevealing?: boolean;
+  isAIGenerated?: boolean;
 }
 
-const QuestionCard = ({ question, isRevealing = false }: QuestionCardProps) => {
+const QuestionCard = ({ question, isRevealing = false, isAIGenerated = false }: QuestionCardProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
@@ -23,7 +24,13 @@ const QuestionCard = ({ question, isRevealing = false }: QuestionCardProps) => {
           ${isRevealing ? 'hover:shadow-xl' : ''}
         `}
       >
-        <CardContent className="p-8 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg border-2 border-primary/20 backface-hidden relative overflow-hidden">
+        <CardContent className={`
+          p-8 bg-gradient-to-br rounded-lg border-2 relative overflow-hidden
+          ${isAIGenerated 
+            ? 'from-purple-500/10 to-indigo-500/10 border-purple-500/20' 
+            : 'from-primary/10 to-accent/10 border-primary/20'
+          }
+        `}>
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 opacity-20">
             <Sparkles className="h-12 w-12" />
@@ -34,6 +41,13 @@ const QuestionCard = ({ question, isRevealing = false }: QuestionCardProps) => {
           <div className="flex flex-col items-center relative z-10">
             <h3 className="text-2xl font-bold text-center mb-2">Qui est le plus susceptible de...</h3>
             <p className="text-xl text-center font-medium">{question}</p>
+            
+            {isAIGenerated && (
+              <div className="flex items-center mt-4 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30">
+                <Sparkles className="h-3 w-3 text-purple-500 mr-1.5" />
+                <span className="text-xs text-purple-500">Générée par IA</span>
+              </div>
+            )}
           </div>
         </CardContent>
 
