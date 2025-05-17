@@ -100,7 +100,7 @@ const OnlineGame = () => {
           // Simuler qu'on a trouvé une partie
           toast({
             title: 'Partie trouvée !',
-            description: 'Redirection vers la salle d'attente...'
+            description: "Redirection vers la salle d'attente..."
           });
           
           setTimeout(() => {
@@ -149,7 +149,7 @@ const OnlineGame = () => {
     
     toast({
       title: 'Partie rejointe !',
-      description: 'Redirection vers la salle d'attente...'
+      description: "Redirection vers la salle d'attente..."
     });
     
     // Simuler qu'on rejoint la partie
