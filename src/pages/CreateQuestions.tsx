@@ -43,10 +43,13 @@ const CreateQuestions = () => {
       return;
     }
     
+    // Assurer le typage correct pour visibility
+    const visibility: QuestionVisibility = isPublic ? 'public' : 'private';
+    
     const newQuestionObj: CustomQuestion = {
       id: Date.now().toString(),
       text: newQuestion.trim(),
-      visibility: isPublic ? 'public' : 'private',
+      visibility,
       createdAt: new Date(),
     };
     
@@ -70,9 +73,12 @@ const CreateQuestions = () => {
   const handleUpdateQuestion = () => {
     if (!editingQuestion) return;
     
+    // Assurer le typage correct pour visibility
+    const visibility: QuestionVisibility = isPublic ? 'public' : 'private';
+    
     const updatedQuestions = questions.map(q => 
       q.id === editingQuestion.id 
-      ? { ...q, text: newQuestion, visibility: isPublic ? 'public' : 'private' } 
+      ? { ...q, text: newQuestion, visibility } 
       : q
     );
     
