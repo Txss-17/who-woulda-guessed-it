@@ -5,12 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import PlayerAvatar from '@/components/PlayerAvatar';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, Users } from 'lucide-react';
-
-interface Player {
-  id: number;
-  name: string;
-}
+import { Clock, Users, MessageSquare } from 'lucide-react';
+import MessagingDialog from '@/components/messaging/MessagingDialog';
+import { Player, UserStatus } from '@/types/onlineGame';
 
 const WaitingRoom = () => {
   const { gameCode } = useParams();
@@ -20,7 +17,8 @@ const WaitingRoom = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isWaiting, setIsWaiting] = useState(true);
-
+  const [isMessagingOpen, setIsMessagingOpen] = useState(false);
+  
   useEffect(() => {
     // Récupérer les données du joueur actuel
     const playerDataStr = sessionStorage.getItem('playerData');
@@ -35,18 +33,25 @@ const WaitingRoom = () => {
     }
     
     const playerData = JSON.parse(playerDataStr);
-    setCurrentPlayer(playerData);
+    const currentPlayerWithStatus: Player = {
+      ...playerData,
+      status: 'online' as UserStatus,
+    };
+    setCurrentPlayer(currentPlayerWithStatus);
     
     // Simuler l'ajout de joueurs à intervalles réguliers
     const fakePlayerNames = ['Alex', 'Sam', 'Jordan', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Jamie'];
-    setPlayers([{ id: playerData.id, name: playerData.name }]);
+    const statuses: UserStatus[] = ['online', 'online', 'away', 'online'];
+    
+    setPlayers([currentPlayerWithStatus]);
     
     let addedPlayers = 1;
     const interval = setInterval(() => {
       if (addedPlayers < 5) {
-        const newPlayer = {
-          id: Date.now() + addedPlayers,
-          name: fakePlayerNames[addedPlayers - 1]
+        const newPlayer: Player = {
+          id: Date.now() + addedPlayers + '',
+          name: fakePlayerNames[addedPlayers - 1],
+          status: statuses[addedPlayers % statuses.length],
         };
         setPlayers(prev => [...prev, newPlayer]);
         addedPlayers++;
@@ -59,9 +64,18 @@ const WaitingRoom = () => {
           
           setTimeout(() => {
             // Stocker les données du jeu pour la page de jeu
+            const finalPlayers = [
+              ...players, 
+              {
+                id: Date.now() + 5 + '',
+                name: fakePlayerNames[4],
+                status: 'online' as UserStatus
+              }
+            ];
+            
             sessionStorage.setItem('gameData', JSON.stringify({
               gameCode,
-              players: [...players, { id: Date.now() + 5, name: fakePlayerNames[4] }],
+              players: finalPlayers,
               questions: [
                 "...dormir au boulot?",
                 "...oublier l'anniversaire de son/sa partenaire?",
@@ -119,6 +133,7 @@ const WaitingRoom = () => {
                     name={player.name}
                     size="md"
                     highlighted={player.id === currentPlayer?.id}
+                    status={player.status}
                   />
                   <span className="mt-2 text-sm truncate w-full text-center">
                     {player.name}
@@ -129,18 +144,39 @@ const WaitingRoom = () => {
             </div>
           </div>
           
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (confirm("Quitter la salle d'attente ?")) {
-                navigate('/');
-              }
-            }}
-          >
-            Quitter
-          </Button>
+          <div className="flex gap-2 justify-center">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (confirm("Quitter la salle d'attente ?")) {
+                  navigate('/');
+                }
+              }}
+            >
+              Quitter
+            </Button>
+            
+            <Button
+              variant="secondary"
+              onClick={() => setIsMessagingOpen(true)}
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Messages
+            </Button>
+          </div>
         </Card>
       </div>
+      
+      {currentPlayer && (
+        <MessagingDialog
+          open={isMessagingOpen}
+          onOpenChange={setIsMessagingOpen}
+          gameId={gameCode}
+          currentUserId={currentPlayer.id}
+          currentUserName={currentPlayer.name}
+          players={players}
+        />
+      )}
     </div>
   );
 };

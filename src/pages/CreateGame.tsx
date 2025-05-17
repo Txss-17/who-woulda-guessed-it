@@ -7,17 +7,20 @@ import {
   ChevronLeft, 
   Settings,
   Play,
-  Plus
+  Plus,
+  MessageSquare
 } from 'lucide-react';
 import QRCodeDisplay from '@/components/QRCodeDisplay';
 import PlayerAvatar from '@/components/PlayerAvatar';
+import MessagingDialog from '@/components/messaging/MessagingDialog';
+import { Player } from '@/types/onlineGame';
 
 // Données fictives pour simuler des joueurs qui rejoignent
-const fakePlayers = [
-  { id: 1, name: 'Alex', avatar: undefined },
-  { id: 2, name: 'Sam', avatar: undefined },
-  { id: 3, name: 'Jordan', avatar: undefined },
-  { id: 4, name: 'Taylor', avatar: undefined },
+const fakePlayers: Player[] = [
+  { id: '1', name: 'Alex', avatar: undefined, status: 'online' },
+  { id: '2', name: 'Sam', avatar: undefined, status: 'online' },
+  { id: '3', name: 'Jordan', avatar: undefined, status: 'away' },
+  { id: '4', name: 'Taylor', avatar: undefined, status: 'online' },
 ];
 
 const predefinedQuestions = [
@@ -37,11 +40,36 @@ const CreateGame = () => {
   const { gameCode } = useParams();
   const navigate = useNavigate();
   
-  const [players, setPlayers] = useState<typeof fakePlayers>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [availableQuestions, setAvailableQuestions] = useState<string[]>(predefinedQuestions);
+  const [isMessagingOpen, setIsMessagingOpen] = useState(false);
+  const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
 
   useEffect(() => {
+    // Get current player data or create it if it doesn't exist
+    const playerDataStr = sessionStorage.getItem('playerData');
+    let playerData;
+    
+    if (playerDataStr) {
+      playerData = JSON.parse(playerDataStr);
+    } else {
+      playerData = {
+        name: 'Hôte',
+        id: Date.now().toString(),
+        gameCode
+      };
+      sessionStorage.setItem('playerData', JSON.stringify(playerData));
+    }
+    
+    const currentPlayerWithStatus: Player = {
+      ...playerData,
+      status: 'online',
+    };
+    
+    setCurrentPlayer(currentPlayerWithStatus);
+    setPlayers([currentPlayerWithStatus]);
+    
     // Simuler des joueurs qui rejoignent progressivement
     const timer = setInterval(() => {
       if (players.length < fakePlayers.length) {
@@ -52,7 +80,7 @@ const CreateGame = () => {
     }, 1500);
 
     return () => clearInterval(timer);
-  }, [players.length]);
+  }, [gameCode, players.length]);
 
   const addQuestion = (question: string) => {
     setSelectedQuestions(prev => [...prev, question]);
@@ -79,13 +107,25 @@ const CreateGame = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4">
       <div className="container mx-auto max-w-4xl">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/')}
-          className="mb-6"
-        >
-          <ChevronLeft className="mr-2 h-4 w-4" /> Retour
-        </Button>
+        <div className="flex justify-between items-center mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/')}
+          >
+            <ChevronLeft className="mr-2 h-4 w-4" /> Retour
+          </Button>
+          
+          {currentPlayer && players.length > 1 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsMessagingOpen(true)}
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Messages
+            </Button>
+          )}
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
@@ -101,6 +141,7 @@ const CreateGame = () => {
                     name={player.name}
                     image={player.avatar}
                     size="md"
+                    status={player.status}
                   />
                 ))}
                 {players.length < 10 && (
@@ -188,6 +229,17 @@ const CreateGame = () => {
           </div>
         </div>
       </div>
+      
+      {currentPlayer && (
+        <MessagingDialog
+          open={isMessagingOpen}
+          onOpenChange={setIsMessagingOpen}
+          gameId={gameCode}
+          currentUserId={currentPlayer.id}
+          currentUserName={currentPlayer.name}
+          players={players}
+        />
+      )}
     </div>
   );
 };

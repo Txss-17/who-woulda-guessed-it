@@ -10,14 +10,11 @@ import {
   ArrowRight, 
   ChevronLeft, 
   Users,
+  MessageSquare,
   Sparkles
 } from 'lucide-react';
-
-interface Player {
-  id: number;
-  name: string;
-  avatar?: string;
-}
+import MessagingDialog from '@/components/messaging/MessagingDialog';
+import { Player } from '@/types/onlineGame';
 
 interface GameData {
   gameCode: string;
@@ -35,11 +32,22 @@ const PlayGame = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [votingPhase, setVotingPhase] = useState(true);
-  const [votes, setVotes] = useState<Record<number, number>>({});
+  const [votes, setVotes] = useState<Record<string, number>>({});
   const [showConfetti, setShowConfetti] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [isMessagingOpen, setIsMessagingOpen] = useState(false);
+  const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   
   useEffect(() => {
+    const playerDataStr = sessionStorage.getItem('playerData');
+    if (playerDataStr) {
+      const playerData = JSON.parse(playerDataStr);
+      setCurrentPlayer({
+        ...playerData,
+        status: 'online'
+      });
+    }
+
     const storedGameData = sessionStorage.getItem('gameData');
     if (storedGameData) {
       setGameData(JSON.parse(storedGameData));
@@ -64,7 +72,7 @@ const PlayGame = () => {
     
     setVotingPhase(false);
     
-    const newVotes: Record<number, number> = {};
+    const newVotes: Record<string, number> = {};
     
     if (gameData) {
       gameData.players.forEach(player => {
@@ -103,7 +111,7 @@ const PlayGame = () => {
         return voteCount > votes[parseInt(max)] ? playerId : max;
       }, Object.keys(votes)[0]);
     
-    return gameData.players.find(p => p.id === parseInt(playerIdWithMaxVotes)) || null;
+    return gameData.players.find(p => p.id === playerIdWithMaxVotes) || null;
   };
   
   const winningPlayer = getWinningPlayer();
@@ -165,11 +173,21 @@ const PlayGame = () => {
             <ChevronLeft className="h-4 w-4 mr-1" /> Quitter
           </Button>
           
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {gameData.players.length} joueurs
-            </span>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMessagingOpen(true)}
+            >
+              <MessageSquare className="h-4 w-4 mr-1" /> Messages
+            </Button>
+            
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {gameData.players.length} joueurs
+              </span>
+            </div>
           </div>
           
           <div className="text-sm font-medium">
@@ -205,6 +223,7 @@ const PlayGame = () => {
                     image={player.avatar}
                     size="md"
                     highlighted={selectedPlayer?.id === player.id}
+                    status={player.status}
                   />
                   <span className="mt-2 font-medium text-sm">{player.name}</span>
                 </div>
@@ -239,6 +258,7 @@ const PlayGame = () => {
                     size="md"
                     highlighted={winningPlayer?.id === player.id}
                     count={votes[player.id] || 0}
+                    status={player.status}
                   />
                   <span className="mt-2 font-medium text-sm">{player.name}</span>
                 </div>
@@ -265,6 +285,17 @@ const PlayGame = () => {
           </div>
         )}
       </div>
+      
+      {currentPlayer && (
+        <MessagingDialog
+          open={isMessagingOpen}
+          onOpenChange={setIsMessagingOpen}
+          gameId={gameCode}
+          currentUserId={currentPlayer.id}
+          currentUserName={currentPlayer.name}
+          players={gameData.players}
+        />
+      )}
     </div>
   );
 };

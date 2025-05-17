@@ -63,8 +63,9 @@ const JoinGame = () => {
       // Rediriger vers la salle d'attente ou laisser l'utilisateur attendre ici
       sessionStorage.setItem('playerData', JSON.stringify({
         name: playerName,
-        id: Date.now(),
-        gameCode
+        id: Date.now().toString(),
+        gameCode,
+        status: 'online'
       }));
       
       // Attente supplémentaire pour simuler la redirection

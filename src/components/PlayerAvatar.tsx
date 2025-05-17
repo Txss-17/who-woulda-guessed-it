@@ -1,5 +1,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import StatusIndicator from './user/StatusIndicator';
+import { UserStatus } from '@/types/onlineGame';
 
 interface PlayerAvatarProps {
   name: string;
@@ -7,9 +9,17 @@ interface PlayerAvatarProps {
   size?: 'sm' | 'md' | 'lg';
   highlighted?: boolean;
   count?: number;
+  status?: UserStatus;
 }
 
-const PlayerAvatar = ({ name, image, size = 'md', highlighted = false, count }: PlayerAvatarProps) => {
+const PlayerAvatar = ({ 
+  name, 
+  image, 
+  size = 'md', 
+  highlighted = false, 
+  count,
+  status
+}: PlayerAvatarProps) => {
   const initials = name
     .split(' ')
     .map(part => part[0])
@@ -48,6 +58,12 @@ const PlayerAvatar = ({ name, image, size = 'md', highlighted = false, count }: 
           {initials}
         </AvatarFallback>
       </Avatar>
+      
+      {status && (
+        <div className="absolute -bottom-1 -right-1">
+          <StatusIndicator status={status} size={size === 'lg' ? 'md' : 'sm'} />
+        </div>
+      )}
       
       {count !== undefined && (
         <div className="absolute -top-2 -right-2 bg-accent text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
