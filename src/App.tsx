@@ -11,6 +11,8 @@ import JoinGame from "./pages/JoinGame";
 import PlayGame from "./pages/PlayGame";
 import WaitingRoom from "./pages/WaitingRoom";
 import QuickGame from "./pages/QuickGame";
+import CreateQuestions from "./pages/CreateQuestions";
+import OnlineGame from "./pages/OnlineGame";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +29,8 @@ const App = () => (
           <Route path="/play/:gameCode" element={<PlayGame />} />
           <Route path="/waiting-room/:gameCode" element={<WaitingRoom />} />
           <Route path="/quick-game" element={<QuickGame />} />
+          <Route path="/create-questions" element={<CreateQuestions />} />
+          <Route path="/online" element={<OnlineGame />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -69,7 +69,7 @@ const QuestionCard = ({ question, isRevealing = false, isAIGenerated = false }: 
   );
 };
 
-// Add these CSS utilities to your global CSS or use inline styles
+// Ajouter ces styles CSS à votre CSS global ou utiliser des styles inline
 const styles = `
   .perspective-1000 {
     perspective: 1000px;
