@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,8 @@ import {
   ChevronLeft, 
   Users,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  BarChart
 } from 'lucide-react';
 import MessagingDialog from '@/components/messaging/MessagingDialog';
 import { Player } from '@/types/onlineGame';
@@ -37,6 +37,7 @@ const PlayGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [isMessagingOpen, setIsMessagingOpen] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
+  const [gameResults, setGameResults] = useState<any[]>([]);
   
   useEffect(() => {
     const playerDataStr = sessionStorage.getItem('playerData');
@@ -68,25 +69,43 @@ const PlayGame = () => {
   };
   
   const confirmVote = () => {
-    if (!selectedPlayer || !votingPhase) return;
+    if (!selectedPlayer || !votingPhase || !gameData) return;
     
     setVotingPhase(false);
     
     const newVotes: Record<string, number> = {};
     
-    if (gameData) {
-      gameData.players.forEach(player => {
-        newVotes[player.id] = Math.floor(Math.random() * 4);
-      });
-      
-      newVotes[selectedPlayer.id] = (newVotes[selectedPlayer.id] || 0) + 1;
-      
-      setVotes(newVotes);
-      
-      setTimeout(() => {
-        setShowConfetti(true);
-      }, 2000);
-    }
+    gameData.players.forEach(player => {
+      newVotes[player.id] = Math.floor(Math.random() * 4);
+    });
+    
+    newVotes[selectedPlayer.id] = (newVotes[selectedPlayer.id] || 0) + 1;
+    
+    setVotes(newVotes);
+    
+    // Save the results of this question
+    const currentQuestion = gameData.questions[currentQuestionIndex];
+    const questionResult = {
+      questionText: currentQuestion,
+      votes: Object.entries(newVotes).map(([playerId, count]) => {
+        const player = gameData.players.find(p => p.id === playerId);
+        return {
+          playerId,
+          playerName: player?.name || "Unknown",
+          count
+        };
+      }),
+      winner: {
+        playerId: selectedPlayer.id,
+        playerName: selectedPlayer.name
+      }
+    };
+    
+    setGameResults(prev => [...prev, questionResult]);
+    
+    setTimeout(() => {
+      setShowConfetti(true);
+    }, 2000);
   };
   
   const nextQuestion = () => {
@@ -100,6 +119,20 @@ const PlayGame = () => {
       setShowConfetti(false);
     } else {
       setGameOver(true);
+      
+      // Save game results to session storage for history viewing
+      const gameHistory = JSON.parse(sessionStorage.getItem('gameHistory') || '[]');
+      const newGameHistory = [
+        ...gameHistory,
+        {
+          gameId: gameCode,
+          date: new Date().toISOString(),
+          gameType: "friendly",
+          playerCount: gameData.players.length,
+          questions: gameResults
+        }
+      ];
+      sessionStorage.setItem('gameHistory', JSON.stringify(newGameHistory));
     }
   };
   
@@ -108,7 +141,7 @@ const PlayGame = () => {
     
     const playerIdWithMaxVotes = Object.entries(votes)
       .reduce((max, [playerId, voteCount]) => {
-        return voteCount > votes[parseInt(max)] ? playerId : max;
+        return voteCount > votes[max] ? playerId : max;
       }, Object.keys(votes)[0]);
     
     return gameData.players.find(p => p.id === playerIdWithMaxVotes) || null;
@@ -141,8 +174,15 @@ const PlayGame = () => {
             </p>
             
             <div className="flex justify-center gap-3">
-              <Button onClick={() => navigate('/')}>Accueil</Button>
-              <Button variant="outline" onClick={() => {
+              <Button onClick={() => navigate('/')} variant="outline">Accueil</Button>
+              <Button 
+                onClick={() => navigate(`/vote-history/${gameCode}`)}
+                className="gap-2"
+              >
+                <BarChart className="h-4 w-4" />
+                Voir les votes
+              </Button>
+              <Button onClick={() => {
                 const newGameCode = Math.random().toString(36).substring(2, 8).toUpperCase();
                 navigate(`/create-game/${newGameCode}`);
               }}>

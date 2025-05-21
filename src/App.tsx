@@ -13,6 +13,9 @@ import WaitingRoom from "./pages/WaitingRoom";
 import QuickGame from "./pages/QuickGame";
 import CreateQuestions from "./pages/CreateQuestions";
 import OnlineGame from "./pages/OnlineGame";
+import Profile from "./pages/Profile";
+import VoteHistory from "./pages/VoteHistory";
+import Navigation from "./components/layout/Navigation";
 
 const queryClient = new QueryClient();
 
@@ -22,17 +25,25 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/create-game/:gameCode" element={<CreateGame />} />
-          <Route path="/join/:gameCode" element={<JoinGame />} />
-          <Route path="/play/:gameCode" element={<PlayGame />} />
-          <Route path="/waiting-room/:gameCode" element={<WaitingRoom />} />
-          <Route path="/quick-game" element={<QuickGame />} />
-          <Route path="/create-questions" element={<CreateQuestions />} />
-          <Route path="/online" element={<OnlineGame />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <div className="min-h-screen flex flex-col">
+          <Navigation />
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/create-game/:gameCode" element={<CreateGame />} />
+              <Route path="/join/:gameCode" element={<JoinGame />} />
+              <Route path="/play/:gameCode" element={<PlayGame />} />
+              <Route path="/waiting-room/:gameCode" element={<WaitingRoom />} />
+              <Route path="/quick-game" element={<QuickGame />} />
+              <Route path="/create-questions" element={<CreateQuestions />} />
+              <Route path="/online" element={<OnlineGame />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/vote-history/:gameId" element={<VoteHistory />} />
+              <Route path="/vote-history" element={<VoteHistory />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
