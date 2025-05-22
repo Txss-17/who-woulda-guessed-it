@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import { Download, Share, FilePdf, FileImage } from "lucide-react";
+import { Download, Share, FileText, FileImage } from "lucide-react";
 import { toast } from "sonner";
 import { GameHistoryItem } from "@/types/user";
 import html2canvas from "html2canvas";
@@ -148,7 +148,7 @@ const VoteHistoryExport: React.FC<VoteHistoryExportProps> = ({ gameData }) => {
                 onClick={downloadAsPDF}
                 disabled={isExporting}
               >
-                <FilePdf className="mr-2" size={18} />
+                <FileText className="mr-2" size={18} />
                 Format PDF
               </Button>
               <Button 
