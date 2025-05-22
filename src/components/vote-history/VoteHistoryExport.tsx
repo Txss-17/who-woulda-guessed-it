@@ -30,20 +30,25 @@ const VoteHistoryExport: React.FC<VoteHistoryExportProps> = ({ gameData }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
 
+  // Fonction simple pour obtenir le canvas avec les options correctes
+  const getElementCanvas = async () => {
+    const element = document.getElementById('vote-history-container');
+    if (!element) {
+      throw new Error("Could not find element to export");
+    }
+
+    return await html2canvas(element, {
+      logging: false,
+      useCORS: true,
+      background: "#ffffff"
+    });
+  };
+
   const downloadAsPDF = async () => {
     try {
       setIsExporting(true);
       
-      const element = document.getElementById('vote-history-container');
-      if (!element) {
-        throw new Error("Could not find element to export");
-      }
-
-      const canvas = await html2canvas(element, {
-        logging: false,
-        useCORS: true,
-        backgroundColor: "#ffffff"
-      });
+      const canvas = await getElementCanvas();
       
       const imgData = canvas.toDataURL('image/jpeg', 0.8);
       const pdf = new jsPDF({
@@ -71,16 +76,7 @@ const VoteHistoryExport: React.FC<VoteHistoryExportProps> = ({ gameData }) => {
     try {
       setIsExporting(true);
       
-      const element = document.getElementById('vote-history-container');
-      if (!element) {
-        throw new Error("Could not find element to export");
-      }
-
-      const canvas = await html2canvas(element, {
-        logging: false,
-        useCORS: true,
-        backgroundColor: "#ffffff"
-      });
+      const canvas = await getElementCanvas();
       
       const link = document.createElement('a');
       link.href = canvas.toDataURL('image/png');
@@ -98,16 +94,7 @@ const VoteHistoryExport: React.FC<VoteHistoryExportProps> = ({ gameData }) => {
 
   const handleShare = async () => {
     try {
-      const element = document.getElementById('vote-history-container');
-      if (!element) {
-        throw new Error("Could not find element to export");
-      }
-
-      const canvas = await html2canvas(element, {
-        logging: false,
-        useCORS: true,
-        backgroundColor: "#ffffff"
-      });
+      const canvas = await getElementCanvas();
       
       const blob = await new Promise<Blob>((resolve) => {
         canvas.toBlob((blob) => resolve(blob as Blob), 'image/png', 0.8);
