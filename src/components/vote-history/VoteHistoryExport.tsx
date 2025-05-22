@@ -40,7 +40,6 @@ const VoteHistoryExport: React.FC<VoteHistoryExportProps> = ({ gameData }) => {
       }
 
       const canvas = await html2canvas(element, {
-        scale: 2,
         logging: false,
         useCORS: true,
         backgroundColor: "#ffffff"
@@ -78,7 +77,6 @@ const VoteHistoryExport: React.FC<VoteHistoryExportProps> = ({ gameData }) => {
       }
 
       const canvas = await html2canvas(element, {
-        scale: 2,
         logging: false,
         useCORS: true,
         backgroundColor: "#ffffff"
@@ -106,7 +104,6 @@ const VoteHistoryExport: React.FC<VoteHistoryExportProps> = ({ gameData }) => {
       }
 
       const canvas = await html2canvas(element, {
-        scale: 2,
         logging: false,
         useCORS: true,
         backgroundColor: "#ffffff"
