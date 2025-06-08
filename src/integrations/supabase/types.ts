@@ -93,6 +93,33 @@ export type Database = {
           },
         ]
       }
+      categories_questions: {
+        Row: {
+          age_minimum: number | null
+          couleur: string | null
+          description: string | null
+          icone: string | null
+          id: number
+          nom: string
+        }
+        Insert: {
+          age_minimum?: number | null
+          couleur?: string | null
+          description?: string | null
+          icone?: string | null
+          id?: number
+          nom: string
+        }
+        Update: {
+          age_minimum?: number | null
+          couleur?: string | null
+          description?: string | null
+          icone?: string | null
+          id?: number
+          nom?: string
+        }
+        Relationships: []
+      }
       cities: {
         Row: {
           country_id: number | null
@@ -214,35 +241,102 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          badges: Json | null
+          bio: string | null
+          date_creation: string | null
+          derniere_connexion: string | null
+          email: string | null
+          experience: number | null
+          id: string
+          niveau: number | null
+          parties_jouees: number | null
+          pseudo: string
+          votes_donnes: number | null
+          votes_recus: number | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          badges?: Json | null
+          bio?: string | null
+          date_creation?: string | null
+          derniere_connexion?: string | null
+          email?: string | null
+          experience?: number | null
+          id: string
+          niveau?: number | null
+          parties_jouees?: number | null
+          pseudo: string
+          votes_donnes?: number | null
+          votes_recus?: number | null
+        }
+        Update: {
+          avatar_url?: string | null
+          badges?: Json | null
+          bio?: string | null
+          date_creation?: string | null
+          derniere_connexion?: string | null
+          email?: string | null
+          experience?: number | null
+          id?: string
+          niveau?: number | null
+          parties_jouees?: number | null
+          pseudo?: string
+          votes_donnes?: number | null
+          votes_recus?: number | null
+        }
+        Relationships: []
+      }
       questions: {
         Row: {
+          age_minimum: number | null
+          categorie_id: number | null
           contenu: string
+          contenu_sensible: boolean | null
           cree_par_ia: boolean
           cree_par_user_id: string | null
           id: number
           is_public: boolean
           langue: string | null
+          tags: string[] | null
           type_jeu: string
         }
         Insert: {
+          age_minimum?: number | null
+          categorie_id?: number | null
           contenu: string
+          contenu_sensible?: boolean | null
           cree_par_ia: boolean
           cree_par_user_id?: string | null
           id?: never
           is_public?: boolean
           langue?: string | null
+          tags?: string[] | null
           type_jeu: string
         }
         Update: {
+          age_minimum?: number | null
+          categorie_id?: number | null
           contenu?: string
+          contenu_sensible?: boolean | null
           cree_par_ia?: boolean
           cree_par_user_id?: string | null
           id?: never
           is_public?: boolean
           langue?: string | null
+          tags?: string[] | null
           type_jeu?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "questions_categorie_id_fkey"
+            columns: ["categorie_id"]
+            isOneToOne: false
+            referencedRelation: "categories_questions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "questions_cree_par_user_id_fkey"
             columns: ["cree_par_user_id"]
