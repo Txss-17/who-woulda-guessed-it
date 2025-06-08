@@ -93,6 +93,39 @@ export type Database = {
           },
         ]
       }
+      badges: {
+        Row: {
+          condition_type: string
+          condition_value: number | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          rarity: string | null
+        }
+        Insert: {
+          condition_type: string
+          condition_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          rarity?: string | null
+        }
+        Update: {
+          condition_type?: string
+          condition_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          rarity?: string | null
+        }
+        Relationships: []
+      }
       categories_questions: {
         Row: {
           age_minimum: number | null
@@ -161,6 +194,45 @@ export type Database = {
         }
         Relationships: []
       }
+      friendships: {
+        Row: {
+          created_at: string | null
+          friend_id: string | null
+          id: string
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          friend_id?: string | null
+          id?: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          friend_id?: string | null
+          id?: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friendships_friend_id_fkey"
+            columns: ["friend_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friendships_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_players: {
         Row: {
           game_id: number | null
@@ -203,32 +275,205 @@ export type Database = {
           },
         ]
       }
+      leaderboards: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          period_end: string | null
+          period_start: string | null
+          rank: number | null
+          score: number | null
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          period_end?: string | null
+          period_start?: string | null
+          rank?: number | null
+          score?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          period_end?: string | null
+          period_start?: string | null
+          rank?: number | null
+          score?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leaderboards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_private: boolean | null
+          message_type: string | null
+          party_id: number | null
+          read_at: string | null
+          recipient_id: string | null
+          sender_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_private?: boolean | null
+          message_type?: string | null
+          party_id?: number | null
+          read_at?: string | null
+          recipient_id?: string | null
+          sender_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_private?: boolean | null
+          message_type?: string | null
+          party_id?: number | null
+          read_at?: string | null
+          recipient_id?: string | null
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          notification_type: string
+          read: boolean | null
+          related_id: string | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          notification_type: string
+          read?: boolean | null
+          related_id?: string | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          notification_type?: string
+          read?: boolean | null
+          related_id?: string | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parties: {
         Row: {
+          allow_join_after_start: boolean | null
+          anonymous_voting: boolean | null
+          anti_cheat_enabled: boolean | null
           code_invitation: string
           date_creation: string | null
           host_user_id: string | null
           id: number
+          invite_link: string | null
+          max_players: number | null
           mode: string
+          number_of_rounds: number | null
+          party_password: string | null
+          party_type: Database["public"]["Enums"]["party_type"] | null
+          password_protected: boolean | null
+          settings: Json | null
           statut: string
+          time_per_turn: number | null
           type_jeu: string
         }
         Insert: {
+          allow_join_after_start?: boolean | null
+          anonymous_voting?: boolean | null
+          anti_cheat_enabled?: boolean | null
           code_invitation: string
           date_creation?: string | null
           host_user_id?: string | null
           id?: never
+          invite_link?: string | null
+          max_players?: number | null
           mode: string
+          number_of_rounds?: number | null
+          party_password?: string | null
+          party_type?: Database["public"]["Enums"]["party_type"] | null
+          password_protected?: boolean | null
+          settings?: Json | null
           statut: string
+          time_per_turn?: number | null
           type_jeu: string
         }
         Update: {
+          allow_join_after_start?: boolean | null
+          anonymous_voting?: boolean | null
+          anti_cheat_enabled?: boolean | null
           code_invitation?: string
           date_creation?: string | null
           host_user_id?: string | null
           id?: never
+          invite_link?: string | null
+          max_players?: number | null
           mode?: string
+          number_of_rounds?: number | null
+          party_password?: string | null
+          party_type?: Database["public"]["Enums"]["party_type"] | null
+          password_protected?: boolean | null
+          settings?: Json | null
           statut?: string
+          time_per_turn?: number | null
           type_jeu?: string
         }
         Relationships: [
@@ -237,6 +482,61 @@ export type Database = {
             columns: ["host_user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      party_invitations: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          invite_code: string
+          invitee_id: string | null
+          inviter_id: string | null
+          party_id: number | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          invite_code: string
+          invitee_id?: string | null
+          inviter_id?: string | null
+          party_id?: number | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          invite_code?: string
+          invitee_id?: string | null
+          inviter_id?: string | null
+          party_id?: number | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "party_invitations_invitee_id_fkey"
+            columns: ["invitee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "party_invitations_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "party_invitations_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "parties"
             referencedColumns: ["id"]
           },
         ]
@@ -378,6 +678,115 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          badge_id: string | null
+          earned_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          badge_id?: string | null
+          earned_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          badge_id?: string | null
+          earned_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          setting_key: string
+          setting_value: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          setting_key: string
+          setting_value?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_statistics: {
+        Row: {
+          created_at: string | null
+          id: string
+          period: string | null
+          stat_type: string
+          stat_value: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          period?: string | null
+          stat_type: string
+          stat_value?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          period?: string | null
+          stat_type?: string
+          stat_value?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_statistics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           avatar_url: string | null
@@ -466,10 +875,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_and_award_badges: {
+        Args: { user_uuid: string }
+        Returns: undefined
+      }
+      generate_invite_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      update_user_stats: {
+        Args: { user_uuid: string; stat_name: string; increment_value?: number }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      party_status: "waiting" | "playing" | "finished" | "cancelled"
+      party_type: "private" | "public" | "mixed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -584,6 +1005,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      party_status: ["waiting", "playing", "finished", "cancelled"],
+      party_type: ["private", "public", "mixed"],
+    },
   },
 } as const

@@ -15,6 +15,7 @@ import CreateQuestions from "./pages/CreateQuestions";
 import OnlineGame from "./pages/OnlineGame";
 import Profile from "./pages/Profile";
 import VoteHistory from "./pages/VoteHistory";
+import Dashboard from "./pages/Dashboard";
 import Navigation from "./components/layout/Navigation";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <main className="flex-1">
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/create-game/:gameCode" element={<CreateGame />} />
               <Route path="/join/:gameCode" element={<JoinGame />} />
               <Route path="/play/:gameCode" element={<PlayGame />} />
