@@ -2,19 +2,22 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 interface Profile {
   id: string;
   pseudo: string;
-  email?: string;
-  avatar_url?: string;
-  bio?: string;
-  niveau: number;
-  experience: number;
-  badges: any[];
-  parties_jouees: number;
-  votes_recus: number;
-  votes_donnes: number;
+  email?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+  niveau: number | null;
+  experience: number | null;
+  badges: Json | null;
+  parties_jouees: number | null;
+  votes_recus: number | null;
+  votes_donnes: number | null;
+  date_creation?: string | null;
+  derniere_connexion?: string | null;
 }
 
 export const useAuth = () => {
