@@ -50,6 +50,13 @@ const Profile = () => {
     return (currentLevel * 100) - experience;
   };
 
+  // Helper function to safely get badges as array
+  const getBadgesArray = () => {
+    if (!profile?.badges) return [];
+    if (Array.isArray(profile.badges)) return profile.badges;
+    return [];
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto mt-8 text-center">
@@ -67,6 +74,8 @@ const Profile = () => {
       </div>
     );
   }
+
+  const badges = getBadgesArray();
 
   return (
     <div className="container mx-auto py-6 px-4">
@@ -114,13 +123,13 @@ const Profile = () => {
                   </Badge>
                 </div>
                 <div className="text-xs text-muted-foreground mb-1">
-                  {profile.experience} XP • {getExperienceForNextLevel(profile.experience)} XP pour le niveau suivant
+                  {profile.experience} XP • {getExperienceForNextLevel(profile.experience || 0)} XP pour le niveau suivant
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className="bg-primary h-2 rounded-full" 
                     style={{
-                      width: `${(profile.experience % 100)}%`
+                      width: `${((profile.experience || 0) % 100)}%`
                     }}
                   ></div>
                 </div>
@@ -167,10 +176,10 @@ const Profile = () => {
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">Badges</h3>
                 <div className="flex flex-wrap gap-2">
-                  {profile.badges && profile.badges.length > 0 ? (
-                    profile.badges.map((badge, index) => (
+                  {badges.length > 0 ? (
+                    badges.map((badge: any, index: number) => (
                       <Badge key={index} variant="outline">
-                        {badge.name}
+                        {badge.name || badge}
                       </Badge>
                     ))
                   ) : (
@@ -214,9 +223,9 @@ const Profile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {profile.parties_jouees > 0 ? (
+                    {(profile.parties_jouees || 0) > 0 ? (
                       <p className="text-center text-muted-foreground">
-                        Vous avez joué {profile.parties_jouees} partie{profile.parties_jouees > 1 ? "s" : ""}
+                        Vous avez joué {profile.parties_jouees} partie{(profile.parties_jouees || 0) > 1 ? "s" : ""}
                       </p>
                     ) : (
                       <p className="text-center text-muted-foreground">
