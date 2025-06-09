@@ -19,7 +19,14 @@ export const useStatistics = (userId?: string) => {
         .eq('user_id', userId);
 
       if (error) throw error;
-      setUserStats(data || []);
+      
+      // Type assertion for statistics
+      const typedStats: UserStatistic[] = (data || []).map(stat => ({
+        ...stat,
+        period: stat.period as 'all_time' | 'weekly' | 'monthly'
+      }));
+      
+      setUserStats(typedStats);
     } catch (error) {
       console.error('Erreur lors de la récupération des statistiques:', error);
     } finally {
@@ -41,7 +48,14 @@ export const useStatistics = (userId?: string) => {
         .limit(50);
 
       if (error) throw error;
-      setLeaderboard(data || []);
+      
+      // Type assertion for leaderboard entries
+      const typedLeaderboard: LeaderboardEntry[] = (data || []).map(entry => ({
+        ...entry,
+        category: entry.category as 'global' | 'weekly' | 'monthly' | 'games_played' | 'votes_received'
+      }));
+      
+      setLeaderboard(typedLeaderboard);
     } catch (error) {
       console.error('Erreur lors de la récupération du classement:', error);
     } finally {

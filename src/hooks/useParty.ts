@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Party, PartySettings, PartyType } from '@/types/party';
+import { Party, PartySettings, PartyType, PartyStatus } from '@/types/party';
 import { toast } from 'sonner';
 
 export const useParty = () => {
@@ -65,7 +65,15 @@ export const useParty = () => {
         .order('date_creation', { ascending: false });
 
       if (error) throw error;
-      setParties(data || []);
+      
+      // Type assertion for party data
+      const typedParties: Party[] = (data || []).map(party => ({
+        ...party,
+        statut: party.statut as PartyStatus,
+        party_type: party.party_type as PartyType
+      }));
+      
+      setParties(typedParties);
     } catch (error) {
       console.error('Erreur lors de la récupération des parties:', error);
       toast.error('Erreur lors de la récupération des parties');

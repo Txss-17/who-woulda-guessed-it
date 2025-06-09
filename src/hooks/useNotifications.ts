@@ -21,8 +21,15 @@ export const useNotifications = (userId?: string) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.read).length || 0);
+      
+      // Type assertion for notification types
+      const typedNotifications: Notification[] = (data || []).map(notification => ({
+        ...notification,
+        notification_type: notification.notification_type as 'party_invite' | 'friend_request' | 'message' | 'turn_start' | 'party_result'
+      }));
+      
+      setNotifications(typedNotifications);
+      setUnreadCount(typedNotifications.filter(n => !n.read).length);
     } catch (error) {
       console.error('Erreur lors de la récupération des notifications:', error);
     } finally {

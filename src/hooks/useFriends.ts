@@ -21,7 +21,14 @@ export const useFriends = (userId?: string) => {
         .eq('status', 'accepted');
 
       if (error) throw error;
-      setFriends(data || []);
+      
+      // Type assertion for friendship status
+      const typedFriends: Friendship[] = (data || []).map(friendship => ({
+        ...friendship,
+        status: friendship.status as 'pending' | 'accepted' | 'blocked'
+      }));
+      
+      setFriends(typedFriends);
     } catch (error) {
       console.error('Erreur lors de la récupération des amis:', error);
     } finally {
@@ -40,7 +47,14 @@ export const useFriends = (userId?: string) => {
         .eq('status', 'pending');
 
       if (error) throw error;
-      setPendingRequests(data || []);
+      
+      // Type assertion for friendship status
+      const typedRequests: Friendship[] = (data || []).map(friendship => ({
+        ...friendship,
+        status: friendship.status as 'pending' | 'accepted' | 'blocked'
+      }));
+      
+      setPendingRequests(typedRequests);
     } catch (error) {
       console.error('Erreur lors de la récupération des demandes:', error);
     }

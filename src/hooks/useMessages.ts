@@ -27,7 +27,14 @@ export const useMessages = (userId?: string, partyId?: number) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setMessages(data || []);
+      
+      // Type assertion for message types
+      const typedMessages: Message[] = (data || []).map(message => ({
+        ...message,
+        message_type: message.message_type as 'text' | 'system' | 'notification'
+      }));
+      
+      setMessages(typedMessages);
     } catch (error) {
       console.error('Erreur lors de la récupération des messages:', error);
     } finally {
@@ -66,6 +73,7 @@ export const useMessages = (userId?: string, partyId?: number) => {
         .eq('id', messageId);
 
       if (error) throw error;
+      fetchMessages();
     } catch (error) {
       console.error('Erreur lors du marquage comme lu:', error);
     }

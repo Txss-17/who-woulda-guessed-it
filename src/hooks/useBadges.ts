@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Badge, UserBadge } from '@/types/gamification';
+import { Badge, UserBadge, BadgeConditionType, BadgeRarity } from '@/types/gamification';
 
 export const useBadges = (userId?: string) => {
   const [allBadges, setAllBadges] = useState<Badge[]>([]);
@@ -17,7 +17,15 @@ export const useBadges = (userId?: string) => {
         .order('rarity', { ascending: true });
 
       if (error) throw error;
-      setAllBadges(data || []);
+      
+      // Type assertion to ensure proper types
+      const typedBadges: Badge[] = (data || []).map(badge => ({
+        ...badge,
+        condition_type: badge.condition_type as BadgeConditionType,
+        rarity: badge.rarity as BadgeRarity
+      }));
+      
+      setAllBadges(typedBadges);
     } catch (error) {
       console.error('Erreur lors de la récupération des badges:', error);
     } finally {
@@ -39,7 +47,18 @@ export const useBadges = (userId?: string) => {
         .order('earned_at', { ascending: false });
 
       if (error) throw error;
-      setUserBadges(data || []);
+      
+      // Type assertion for user badges
+      const typedUserBadges: UserBadge[] = (data || []).map(userBadge => ({
+        ...userBadge,
+        badge: userBadge.badge ? {
+          ...userBadge.badge,
+          condition_type: userBadge.badge.condition_type as BadgeConditionType,
+          rarity: userBadge.badge.rarity as BadgeRarity
+        } : undefined
+      }));
+      
+      setUserBadges(typedUserBadges);
     } catch (error) {
       console.error('Erreur lors de la récupération des badges utilisateur:', error);
     }
