@@ -1,4 +1,5 @@
 
+
 export type PartyType = 'private' | 'public' | 'mixed';
 export type PartyStatus = 'waiting' | 'playing' | 'finished' | 'cancelled';
 

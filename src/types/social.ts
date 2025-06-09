@@ -1,4 +1,5 @@
 
+
 export interface Friendship {
   id: string;
   user_id: string;

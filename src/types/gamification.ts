@@ -1,4 +1,5 @@
 
+
 export type BadgeRarity = 'common' | 'rare' | 'epic' | 'legendary';
 export type BadgeConditionType = 'games_played' | 'votes_received' | 'votes_given' | 'win_streak' | 'special';
 

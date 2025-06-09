@@ -36,7 +36,7 @@ export const useParty = () => {
           anti_cheat_enabled: settings.antiCheatEnabled,
           password_protected: settings.passwordProtected,
           party_password: settings.partyPassword,
-          settings: settings
+          settings: settings as any
         })
         .select()
         .single();
