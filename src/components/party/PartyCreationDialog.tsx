@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,9 +22,10 @@ import { toast } from 'sonner';
 interface PartyCreationDialogProps {
   gameType: string;
   onPartyCreated?: (party: any) => void;
+  children?: React.ReactNode;
 }
 
-const PartyCreationDialog = ({ gameType, onPartyCreated }: PartyCreationDialogProps) => {
+const PartyCreationDialog = ({ gameType, onPartyCreated, children }: PartyCreationDialogProps) => {
   const { user } = useAuth();
   const { createParty, loading } = useParty();
   const [open, setOpen] = useState(false);
@@ -59,10 +59,12 @@ const PartyCreationDialog = ({ gameType, onPartyCreated }: PartyCreationDialogPr
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full gap-2">
-          <Plus className="h-4 w-4" />
-          Créer une partie
-        </Button>
+        {children || (
+          <Button className="w-full gap-2">
+            <Plus className="h-4 w-4" />
+            Créer une partie
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
