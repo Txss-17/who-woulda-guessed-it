@@ -1,93 +1,93 @@
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Shield, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { OnlineGame, typeLabels } from '@/types/onlineGame';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { Users, Clock, Share2, Sparkles } from 'lucide-react';
+import ShareOnlineGameDialog from './ShareOnlineGameDialog';
 
 interface GameItemProps {
   game: OnlineGame;
+  onJoin: (gameId: string) => void;
 }
 
-const GameItem = ({ game }: GameItemProps) => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  
-  const joinGame = () => {
-    if (game.status === 'playing') {
-      toast({
-        title: 'Partie en cours',
-        description: 'Cette partie est déjà en cours',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    if (game.players.count >= game.players.max) {
-      toast({
-        title: 'Partie complète',
-        description: 'Cette partie est déjà complète',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    toast({
-      title: 'Partie rejointe !',
-      description: "Redirection vers la salle d'attente..."
-    });
-    
-    // Simuler qu'on rejoint la partie
-    sessionStorage.setItem('playerData', JSON.stringify({
-      name: 'Joueur' + Math.floor(Math.random() * 1000),
-      id: Date.now(),
-      gameCode: game.id
-    }));
-    
-    setTimeout(() => {
-      navigate(`/waiting-room/${game.id}`);
-    }, 1000);
-  };
+const GameItem = ({ game, onJoin }: GameItemProps) => {
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const isFull = game.players.count >= game.players.max;
   
   return (
-    <div 
-      className={`
-        bg-card border rounded-lg p-4 flex justify-between items-center
-        ${game.status === 'playing' ? 'opacity-70' : ''}
-      `}
-    >
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className="font-medium">{game.name}</h3>
-          <Badge variant="outline" className="text-xs">
-            {typeLabels[game.type]}
-          </Badge>
-          {game.status === 'playing' && (
-            <Badge variant="secondary" className="text-xs">En cours</Badge>
-          )}
-        </div>
+    <>
+      <Card className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-card to-card/80 border-primary/10 hover:border-primary/30">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <h3 className="font-semibold text-lg leading-tight">{game.name}</h3>
+              <div className="flex items-center gap-2">
+                <Badge 
+                  variant="secondary" 
+                  className="bg-gradient-to-r from-primary/20 to-accent/20 text-primary border-primary/30"
+                >
+                  {typeLabels[game.type]}
+                </Badge>
+                {game.status === 'waiting' && (
+                  <Badge variant="outline" className="text-green-600 border-green-200">
+                    <Clock className="h-3 w-3 mr-1" />
+                    En attente
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShareDialogOpen(true)}
+              className="hover:bg-primary/10 hover:scale-110 transition-all"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
         
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Shield className="h-3 w-3" />
-            <span>Hôte: {game.host}</span>
+        <CardContent className="pt-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                <span className="font-medium">
+                  {game.players.count}/{game.players.max}
+                </span>
+              </div>
+              <div className="text-xs">
+                Hôte: <span className="font-medium text-foreground">{game.host}</span>
+              </div>
+            </div>
+            
+            <Button
+              onClick={() => onJoin(game.id)}
+              disabled={isFull}
+              size="sm"
+              className={`
+                transition-all duration-300 
+                ${isFull 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:shadow-lg hover:scale-105 bg-gradient-to-r from-primary to-accent'
+                }
+              `}
+            >
+              {isFull ? 'Complet' : 'Rejoindre'}
+              {!isFull && <Sparkles className="h-3 w-3 ml-1" />}
+            </Button>
           </div>
-          <div className="flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            <span>{game.players.count}/{game.players.max} joueurs</span>
-          </div>
-        </div>
-      </div>
-      
-      <Button
-        size="sm"
-        disabled={game.status === 'playing' || game.players.count >= game.players.max}
-        onClick={joinGame}
-      >
-        Rejoindre
-      </Button>
-    </div>
+        </CardContent>
+      </Card>
+
+      <ShareOnlineGameDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        game={game}
+      />
+    </>
   );
 };
 

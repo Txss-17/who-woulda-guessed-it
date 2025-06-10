@@ -2,9 +2,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Sparkles, Zap } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BackgroundDecoration, Blob } from '@/components/DecorativeElements';
+import { BackgroundDecoration, Blob, FloatingElements } from '@/components/DecorativeElements';
 import GameList from '@/components/online/GameList';
 import MatchmakingOptions from '@/components/online/MatchmakingOptions';
 import MatchmakingCard from '@/components/online/MatchmakingCard';
@@ -23,43 +23,77 @@ const OnlineGame = () => {
   } = useMatchmaking();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4">
-      <Blob color="primary" position="top-left" size="lg" className="-mt-20 -ml-20 opacity-20" />
-      <Blob color="accent" position="bottom-right" size="lg" className="-mb-20 -mr-20 opacity-20" />
-      <BackgroundDecoration variant="minimal" position="bottom-left" className="opacity-10" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 py-6 px-4 relative overflow-hidden">
+      {/* Enhanced background elements */}
+      <FloatingElements />
+      <Blob color="primary" position="top-left" size="lg" className="-mt-32 -ml-32 opacity-30 animate-float-slow" />
+      <Blob color="accent" position="bottom-right" size="lg" className="-mb-32 -mr-32 opacity-25 animate-float" />
+      <Blob color="secondary" position="top-right" size="md" className="-mt-16 -mr-16 opacity-20" />
+      <BackgroundDecoration variant="primary" position="top-right" className="opacity-15" />
+      <BackgroundDecoration variant="accent" position="bottom-left" className="opacity-10" />
       
-      <div className="container mx-auto max-w-4xl">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/')}
-          className="mb-6"
-        >
-          <ChevronLeft className="mr-2 h-4 w-4" /> Retour
-        </Button>
+      <div className="container mx-auto max-w-4xl relative z-10">
+        <div className="flex items-center justify-between mb-8">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/')}
+            className="hover:bg-primary/10 transition-all hover:scale-105"
+          >
+            <ChevronLeft className="mr-2 h-4 w-4" /> Retour
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+            <span className="text-sm text-muted-foreground">En ligne</span>
+          </div>
+        </div>
         
-        <h1 className="text-3xl font-bold mb-8">Partie en ligne</h1>
+        <div className="text-center mb-8 space-y-4">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-fade-in">
+            Parties en ligne
+          </h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Rejoins des parties publiques ou utilise le matchmaking pour trouver des joueurs avec les mêmes préférences
+          </p>
+        </div>
         
         {matchmaking ? (
-          <MatchmakingCard 
-            type={matchmakingType}
-            countdown={countdown}
-            onCancel={cancelMatchmaking}
-          />
+          <div className="animate-fade-in">
+            <MatchmakingCard 
+              type={matchmakingType}
+              countdown={countdown}
+              onCancel={cancelMatchmaking}
+            />
+          </div>
         ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="public">Parties publiques</TabsTrigger>
-              <TabsTrigger value="matchmaking">Matchmaking</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="public" className="mt-4">
-              <GameList onSwitchToMatchmaking={() => setActiveTab('matchmaking')} />
-            </TabsContent>
-            
-            <TabsContent value="matchmaking" className="mt-4">
-              <MatchmakingOptions onStartMatchmaking={startMatchmaking} />
-            </TabsContent>
-          </Tabs>
+          <div className="animate-fade-in">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-2 bg-white/50 backdrop-blur-sm">
+                <TabsTrigger 
+                  value="public" 
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white transition-all"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Parties publiques
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="matchmaking"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white transition-all"
+                >
+                  <Zap className="h-4 w-4 mr-2" />
+                  Matchmaking
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="public" className="mt-6 animate-fade-in">
+                <GameList onSwitchToMatchmaking={() => setActiveTab('matchmaking')} />
+              </TabsContent>
+              
+              <TabsContent value="matchmaking" className="mt-6 animate-fade-in">
+                <MatchmakingOptions onStartMatchmaking={startMatchmaking} />
+              </TabsContent>
+            </Tabs>
+          </div>
         )}
       </div>
     </div>

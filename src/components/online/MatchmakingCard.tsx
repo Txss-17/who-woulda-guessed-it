@@ -1,8 +1,9 @@
 
-import { Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { GameType, typeLabels } from '@/types/onlineGame';
+import { Search, X, Sparkles, Zap } from 'lucide-react';
 
 interface MatchmakingCardProps {
   type: GameType;
@@ -11,46 +12,59 @@ interface MatchmakingCardProps {
 }
 
 const MatchmakingCard = ({ type, countdown, onCancel }: MatchmakingCardProps) => {
+  const progress = ((10 - countdown) / 10) * 100;
+  
   return (
-    <Card className="p-8 text-center">
-      <div className="mb-6">
-        <div className="w-20 h-20 mx-auto bg-primary/20 rounded-full flex items-center justify-center mb-4">
-          <Users className="h-10 w-10 text-primary animate-pulse" />
-        </div>
-        <h2 className="text-xl font-bold mb-2">Recherche de joueurs en cours...</h2>
-        <p className="text-muted-foreground">
-          Recherche d'une partie de type {typeLabels[type]}
-        </p>
-      </div>
+    <Card className="mx-auto max-w-md bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20 shadow-xl animate-fade-in">
+      <CardHeader className="text-center pb-4">
+        <CardTitle className="flex items-center justify-center gap-2 text-xl">
+          <div className="relative">
+            <Search className="h-6 w-6 text-primary animate-spin-slow" />
+            <Sparkles className="h-3 w-3 text-accent absolute -top-1 -right-1 animate-pulse" />
+          </div>
+          Recherche en cours...
+        </CardTitle>
+      </CardHeader>
       
-      <div className="mx-auto w-20 h-20 relative mb-8">
-        <div className="absolute inset-0 rounded-full border-4 border-primary/20"></div>
-        <div className="absolute inset-0 flex items-center justify-center text-2xl font-bold">
-          {countdown}
+      <CardContent className="space-y-6">
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center gap-2 bg-white/50 px-4 py-2 rounded-full">
+            <Zap className="h-4 w-4 text-primary" />
+            <span className="font-medium">Type: {typeLabels[type]}</span>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <span>Progression</span>
+              <span className="font-mono font-bold text-primary">{countdown}s</span>
+            </div>
+            <Progress 
+              value={progress} 
+              className="h-3 bg-secondary/50" 
+            />
+          </div>
         </div>
-        <svg className="w-full h-full transform -rotate-90">
-          <circle
-            className="text-primary"
-            strokeWidth="4"
-            stroke="currentColor"
-            fill="transparent"
-            r="38"
-            cx="40"
-            cy="40"
-            strokeDasharray={Math.PI * 2 * 38}
-            strokeDashoffset={Math.PI * 2 * 38 * (1 - countdown / 10)}
-          />
-        </svg>
-      </div>
-      
-      <div className="flex justify-center">
+        
+        <div className="bg-white/30 rounded-lg p-4 text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+            <div className="w-2 h-2 bg-accent rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Recherche d'autres joueurs...
+          </p>
+        </div>
+        
         <Button 
           variant="outline" 
           onClick={onCancel}
+          className="w-full hover:bg-destructive/10 hover:border-destructive hover:text-destructive transition-all"
         >
+          <X className="h-4 w-4 mr-2" />
           Annuler
         </Button>
-      </div>
+      </CardContent>
     </Card>
   );
 };
