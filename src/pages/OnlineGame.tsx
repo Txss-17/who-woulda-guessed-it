@@ -2,12 +2,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Sparkles, Zap, Users } from 'lucide-react';
+import { ChevronLeft, Sparkles, Zap, Users, Hash } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BackgroundDecoration, Blob, FloatingElements } from '@/components/DecorativeElements';
 import GameList from '@/components/online/GameList';
 import MatchmakingOptions from '@/components/online/MatchmakingOptions';
 import MatchmakingCard from '@/components/online/MatchmakingCard';
+import JoinGameByCode from '@/components/online/JoinGameByCode';
 import { useMatchmaking } from '@/hooks/useMatchmaking';
 
 const OnlineGame = () => {
@@ -53,7 +54,7 @@ const OnlineGame = () => {
             Parties en ligne
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Rejoins des parties publiques ou utilise le matchmaking pour trouver des joueurs avec les mêmes préférences
+            Rejoins des parties publiques, utilise le matchmaking ou entre un code de partie
           </p>
         </div>
         
@@ -66,9 +67,12 @@ const OnlineGame = () => {
             />
           </div>
         ) : (
-          <div className="animate-fade-in">
+          <div className="animate-fade-in space-y-6">
+            {/* Section pour rejoindre avec un code */}
+            <JoinGameByCode />
+            
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 bg-white/50 backdrop-blur-sm">
+              <TabsList className="grid w-full grid-cols-3 bg-white/50 backdrop-blur-sm">
                 <TabsTrigger 
                   value="public" 
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white transition-all"
@@ -83,6 +87,13 @@ const OnlineGame = () => {
                   <Zap className="h-4 w-4 mr-2" />
                   Matchmaking
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="join-code"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-accent data-[state=active]:text-white transition-all"
+                >
+                  <Hash className="h-4 w-4 mr-2" />
+                  Code/Lien
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="public" className="mt-6 animate-fade-in">
@@ -91,6 +102,10 @@ const OnlineGame = () => {
               
               <TabsContent value="matchmaking" className="mt-6 animate-fade-in">
                 <MatchmakingOptions onStartMatchmaking={startMatchmaking} />
+              </TabsContent>
+              
+              <TabsContent value="join-code" className="mt-6 animate-fade-in">
+                <JoinGameByCode />
               </TabsContent>
             </Tabs>
           </div>
