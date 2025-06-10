@@ -4,6 +4,7 @@ import { useGameList } from '@/hooks/useGameList';
 import GameItem from './GameItem';
 import GameListLoading from './GameListLoading';
 import EmptyGameList from './EmptyGameList';
+import { useToast } from '@/hooks/use-toast';
 
 interface GameListProps {
   onSwitchToMatchmaking: () => void;
@@ -11,6 +12,18 @@ interface GameListProps {
 
 const GameList = ({ onSwitchToMatchmaking }: GameListProps) => {
   const { isLoading, publicGames } = useGameList();
+  const { toast } = useToast();
+  
+  const handleJoinGame = (gameId: string) => {
+    // Simuler la tentative de rejoindre une partie
+    toast({
+      title: "Rejoindre la partie",
+      description: "Tentative de connexion à la partie...",
+    });
+    
+    // Ici on pourrait rediriger vers la salle d'attente de la partie
+    console.log('Joining game:', gameId);
+  };
   
   return (
     <Card className="p-6">
@@ -23,7 +36,7 @@ const GameList = ({ onSwitchToMatchmaking }: GameListProps) => {
       ) : (
         <div className="space-y-4">
           {publicGames.map(game => (
-            <GameItem key={game.id} game={game} />
+            <GameItem key={game.id} game={game} onJoin={handleJoinGame} />
           ))}
         </div>
       )}

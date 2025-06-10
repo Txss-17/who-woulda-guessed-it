@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Sparkles, Zap } from 'lucide-react';
+import { ChevronLeft, Sparkles, Zap, Users } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BackgroundDecoration, Blob, FloatingElements } from '@/components/DecorativeElements';
 import GameList from '@/components/online/GameList';
