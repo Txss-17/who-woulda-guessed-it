@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ChevronLeft, Play, X, Check, Sparkles, RefreshCw } from 'lucide-react';
+import { ChevronLeft, Play, X, Check, Sparkles, RefreshCw, Share2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { 
   QuestionType, 
@@ -13,6 +12,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import ShareGameDialog from '@/components/quick-game/ShareGameDialog';
 
 interface Question {
   id: string;
@@ -28,6 +28,10 @@ const QuickGame = () => {
   const [questionSource, setQuestionSource] = useState<'predefined' | 'ai'>('predefined');
   const [questionType, setQuestionType] = useState<QuestionType>('classic');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [gameCreated, setGameCreated] = useState(false);
+  const [gameCode, setGameCode] = useState('');
+  const [gameData, setGameData] = useState<any>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   
   // Initialiser les questions sélectionnées par défaut
   useEffect(() => {
@@ -83,13 +87,13 @@ const QuickGame = () => {
     }
   };
   
-  const startGame = () => {
+  const createGame = () => {
     // Vérifier que tous les joueurs ont un nom
     const validPlayers = players.filter(name => name.trim() !== '');
-    if (validPlayers.length < 2) {
+    if (validPlayers.length < 1) {
       toast({
         title: "Pas assez de joueurs",
-        description: "Il faut au moins 2 joueurs pour jouer",
+        description: "Il faut au moins 1 joueur pour créer une partie",
         variant: "destructive",
       });
       return;
@@ -115,18 +119,35 @@ const QuickGame = () => {
       .filter(q => selectedQuestions.includes(q.id))
       .map(q => q.text);
     
-    const gameCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const newGameCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     
-    // Enregistrer les données du jeu
-    sessionStorage.setItem('gameData', JSON.stringify({
-      gameCode,
+    const newGameData = {
+      gameCode: newGameCode,
       players: playerData,
       questions: selectedQuestionTexts,
-      aiGenerated: questionSource === 'ai'
-    }));
+      aiGenerated: questionSource === 'ai',
+      allowJoin: true
+    };
     
-    // Naviguer vers la page de jeu
-    navigate(`/play/${gameCode}`);
+    // Enregistrer les données du jeu
+    sessionStorage.setItem('gameData', JSON.stringify(newGameData));
+    
+    setGameCode(newGameCode);
+    setGameData(newGameData);
+    setGameCreated(true);
+    setShowShareDialog(true);
+  };
+  
+  const startGame = () => {
+    if (gameData && gameData.players.length >= 2) {
+      navigate(`/play/${gameCode}`);
+    } else {
+      toast({
+        title: "Pas assez de joueurs",
+        description: "Il faut au moins 2 joueurs pour commencer la partie",
+        variant: "destructive",
+      });
+    }
   };
 
   // Effet pour charger les questions AI quand on change le type
@@ -152,123 +173,104 @@ const QuickGame = () => {
         
         <h1 className="text-3xl font-bold mb-8">Partie rapide</h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="p-6">
-            <h2 className="text-xl font-bold mb-4">Joueurs</h2>
-            
-            <div className="space-y-3 mb-4">
-              {players.map((player, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input
-                    value={player}
-                    onChange={(e) => updatePlayer(index, e.target.value)}
-                    placeholder={`Joueur ${index + 1}`}
-                  />
-                  
-                  {players.length > 1 && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => removePlayer(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-            
-            <Button 
-              variant="outline" 
-              onClick={addPlayer}
-              disabled={players.length >= 10}
-              className="w-full"
-            >
-              Ajouter un joueur
-            </Button>
-            
-            <div className="mt-6 text-sm text-muted-foreground text-center">
-              Ajoute entre 2 et 10 joueurs pour jouer
-            </div>
-          </Card>
-          
-          <div className="flex flex-col">
-            <Card className="p-6 mb-6 flex-grow">
-              <h2 className="text-xl font-bold mb-4">Questions</h2>
+        {gameCreated ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="p-6">
+              <h2 className="text-xl font-bold mb-4">Partie créée !</h2>
+              <p className="text-muted-foreground mb-4">
+                Ta partie est prête. Invite des amis ou commence à jouer dès maintenant.
+              </p>
               
-              <Tabs defaultValue="predefined" className="mb-4" onValueChange={(value) => setQuestionSource(value as 'predefined' | 'ai')}>
-                <TabsList className="w-full">
-                  <TabsTrigger value="predefined" className="flex-1">Prédéfinies</TabsTrigger>
-                  <TabsTrigger value="ai" className="flex-1">
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Générées par IA
-                  </TabsTrigger>
-                </TabsList>
+              <div className="space-y-3">
+                <Button 
+                  onClick={() => setShowShareDialog(true)}
+                  className="w-full gap-2"
+                  variant="outline"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Inviter des joueurs
+                </Button>
                 
-                <TabsContent value="predefined" className="mt-4">
-                  <div className="max-h-64 overflow-y-auto pr-2">
-                    {questions.map((question) => (
-                      <div 
-                        key={question.id}
-                        className={`
-                          flex items-center gap-2 p-2 rounded-md cursor-pointer mb-1
-                          ${selectedQuestions.includes(question.id) ? 'bg-primary/20' : 'hover:bg-secondary'}
-                        `}
-                        onClick={() => toggleQuestion(question.id)}
+                <Button 
+                  onClick={startGame}
+                  className="w-full gap-2"
+                  disabled={gameData?.players.length < 2}
+                >
+                  <Play className="h-5 w-5" />
+                  Commencer maintenant ({gameData?.players.length || 0} joueurs)
+                </Button>
+              </div>
+            </Card>
+            
+            <Card className="p-6">
+              <h2 className="text-xl font-bold mb-4">Joueurs connectés</h2>
+              <div className="space-y-2">
+                {gameData?.players.map((player: any, index: number) => (
+                  <div key={index} className="flex items-center gap-2 p-2 bg-secondary/50 rounded">
+                    <span>{player.name}</span>
+                    {index === 0 && <Badge variant="secondary">Hôte</Badge>}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="p-6">
+              <h2 className="text-xl font-bold mb-4">Joueurs</h2>
+              
+              <div className="space-y-3 mb-4">
+                {players.map((player, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Input
+                      value={player}
+                      onChange={(e) => updatePlayer(index, e.target.value)}
+                      placeholder={`Joueur ${index + 1}`}
+                    />
+                    
+                    {players.length > 1 && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => removePlayer(index)}
                       >
-                        <div className={`
-                          w-5 h-5 rounded-full flex items-center justify-center
-                          ${selectedQuestions.includes(question.id) ? 'bg-primary text-white' : 'border border-muted-foreground'}
-                        `}>
-                          {selectedQuestions.includes(question.id) && <Check className="h-3 w-3" />}
-                        </div>
-                        <span>Qui est le plus susceptible de {question.text}</span>
-                      </div>
-                    ))}
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
-                </TabsContent>
+                ))}
+              </div>
+              
+              <Button 
+                variant="outline" 
+                onClick={addPlayer}
+                disabled={players.length >= 10}
+                className="w-full"
+              >
+                Ajouter un joueur
+              </Button>
+              
+              <div className="mt-6 text-sm text-muted-foreground text-center">
+                Ajoute au moins 1 joueur pour créer la partie
+              </div>
+            </Card>
+            
+            <div className="flex flex-col">
+              <Card className="p-6 mb-6 flex-grow">
+                <h2 className="text-xl font-bold mb-4">Questions</h2>
                 
-                <TabsContent value="ai" className="mt-4">
-                  <div className="mb-4">
-                    <h3 className="text-sm font-medium mb-2">Type de questions</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {(['classic', 'love', 'friendly', 'crazy', 'party'] as QuestionType[]).map((type) => (
-                        <Badge 
-                          key={type}
-                          variant={questionType === type ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => setQuestionType(type)}
-                        >
-                          {type === 'classic' ? 'Classique' : 
-                           type === 'love' ? 'Amour' :
-                           type === 'friendly' ? 'Amitié' :
-                           type === 'crazy' ? 'Folie' : 'Fête'}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
+                <Tabs defaultValue="predefined" className="mb-4" onValueChange={(value) => setQuestionSource(value as 'predefined' | 'ai')}>
+                  <TabsList className="w-full">
+                    <TabsTrigger value="predefined" className="flex-1">Prédéfinies</TabsTrigger>
+                    <TabsTrigger value="ai" className="flex-1">
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Générées par IA
+                    </TabsTrigger>
+                  </TabsList>
                   
-                  <div className="flex mb-4">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex items-center gap-1"
-                      onClick={generateAIQuestions}
-                      disabled={isGenerating}
-                    >
-                      <RefreshCw className={`h-3 w-3 ${isGenerating ? 'animate-spin' : ''}`} />
-                      Générer d'autres questions
-                    </Button>
-                  </div>
-                  
-                  <div className="max-h-64 overflow-y-auto pr-2">
-                    {isGenerating ? (
-                      <div className="py-8 text-center text-muted-foreground animate-pulse">
-                        <Sparkles className="h-8 w-8 mx-auto mb-2" />
-                        <p>Génération des questions en cours...</p>
-                      </div>
-                    ) : questions.length > 0 ? (
-                      questions.map((question) => (
+                  <TabsContent value="predefined" className="mt-4">
+                    <div className="max-h-64 overflow-y-auto pr-2">
+                      {questions.map((question) => (
                         <div 
                           key={question.id}
                           className={`
@@ -285,33 +287,104 @@ const QuickGame = () => {
                           </div>
                           <span>Qui est le plus susceptible de {question.text}</span>
                         </div>
-                      ))
-                    ) : (
-                      <div className="py-4 text-center text-muted-foreground">
-                        Aucune question générée
+                      ))}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="ai" className="mt-4">
+                    <div className="mb-4">
+                      <h3 className="text-sm font-medium mb-2">Type de questions</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {(['classic', 'love', 'friendly', 'crazy', 'party'] as QuestionType[]).map((type) => (
+                          <Badge 
+                            key={type}
+                            variant={questionType === type ? "default" : "outline"}
+                            className="cursor-pointer"
+                            onClick={() => setQuestionType(type)}
+                          >
+                            {type === 'classic' ? 'Classique' : 
+                             type === 'love' ? 'Amour' :
+                             type === 'friendly' ? 'Amitié' :
+                             type === 'crazy' ? 'Folie' : 'Fête'}
+                          </Badge>
+                        ))}
                       </div>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
+                    </div>
+                    
+                    <div className="flex mb-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex items-center gap-1"
+                        onClick={generateAIQuestions}
+                        disabled={isGenerating}
+                      >
+                        <RefreshCw className={`h-3 w-3 ${isGenerating ? 'animate-spin' : ''}`} />
+                        Générer d'autres questions
+                      </Button>
+                    </div>
+                    
+                    <div className="max-h-64 overflow-y-auto pr-2">
+                      {isGenerating ? (
+                        <div className="py-8 text-center text-muted-foreground animate-pulse">
+                          <Sparkles className="h-8 w-8 mx-auto mb-2" />
+                          <p>Génération des questions en cours...</p>
+                        </div>
+                      ) : questions.length > 0 ? (
+                        questions.map((question) => (
+                          <div 
+                            key={question.id}
+                            className={`
+                              flex items-center gap-2 p-2 rounded-md cursor-pointer mb-1
+                              ${selectedQuestions.includes(question.id) ? 'bg-primary/20' : 'hover:bg-secondary'}
+                            `}
+                            onClick={() => toggleQuestion(question.id)}
+                          >
+                            <div className={`
+                              w-5 h-5 rounded-full flex items-center justify-center
+                              ${selectedQuestions.includes(question.id) ? 'bg-primary text-white' : 'border border-muted-foreground'}
+                            `}>
+                              {selectedQuestions.includes(question.id) && <Check className="h-3 w-3" />}
+                            </div>
+                            <span>Qui est le plus susceptible de {question.text}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="py-4 text-center text-muted-foreground">
+                          Aucune question générée
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+                
+                <div className="text-sm text-muted-foreground mt-2">
+                  {selectedQuestions.length} question(s) sélectionnée(s)
+                </div>
+              </Card>
               
-              <div className="text-sm text-muted-foreground mt-2">
-                {selectedQuestions.length} question(s) sélectionnée(s)
-              </div>
-            </Card>
-            
-            <Button 
-              size="lg" 
-              className="gap-2"
-              onClick={startGame}
-              disabled={players.filter(p => p.trim()).length < 2 || selectedQuestions.length === 0}
-            >
-              <Play className="h-5 w-5" />
-              Commencer la partie
-            </Button>
+              <Button 
+                size="lg" 
+                className="gap-2"
+                onClick={createGame}
+                disabled={players.filter(p => p.trim()).length < 1 || selectedQuestions.length === 0}
+              >
+                <Play className="h-5 w-5" />
+                Créer la partie
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
+      
+      {gameData && (
+        <ShareGameDialog
+          open={showShareDialog}
+          onOpenChange={setShowShareDialog}
+          gameCode={gameCode}
+          gameData={gameData}
+        />
+      )}
     </div>
   );
 };

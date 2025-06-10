@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +7,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CreateGame from "./pages/CreateGame";
 import JoinGame from "./pages/JoinGame";
+import JoinQuickGame from "./pages/JoinQuickGame";
 import PlayGame from "./pages/PlayGame";
 import WaitingRoom from "./pages/WaitingRoom";
 import QuickGame from "./pages/QuickGame";
@@ -34,6 +34,7 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/create-game/:gameCode" element={<CreateGame />} />
               <Route path="/join/:gameCode" element={<JoinGame />} />
+              <Route path="/join-quick/:gameCode" element={<JoinQuickGame />} />
               <Route path="/play/:gameCode" element={<PlayGame />} />
               <Route path="/waiting-room/:gameCode" element={<WaitingRoom />} />
               <Route path="/quick-game" element={<QuickGame />} />
