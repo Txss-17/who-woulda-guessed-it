@@ -58,7 +58,7 @@ const ResultsPhase = ({
           onClick={nextQuestion}
           className="gap-2"
         >
-          Question suivante
+          Donner un gage
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>

@@ -10,6 +10,7 @@ import { useGameVotes } from '@/hooks/useGameVotes';
 import GameHeader from '@/components/game/GameHeader';
 import VotingPhase from '@/components/game/VotingPhase';
 import ResultsPhase from '@/components/game/ResultsPhase';
+import ChallengePhase from '@/components/game/ChallengePhase';
 import GameResult from '@/components/game/GameResult';
 
 interface GameData {
@@ -42,7 +43,19 @@ const PlayGame = () => {
 
     const storedGameData = sessionStorage.getItem('gameData');
     if (storedGameData) {
-      setGameData(JSON.parse(storedGameData));
+      const data = JSON.parse(storedGameData);
+      // Vérifier que le joueur actuel fait partie de la partie
+      const playerExists = data.players.some((p: Player) => p.id === JSON.parse(playerDataStr || '{}').id);
+      if (playerExists) {
+        setGameData(data);
+      } else {
+        toast({
+          title: "Erreur",
+          description: "Vous ne faites pas partie de cette partie",
+          variant: "destructive"
+        });
+        navigate('/');
+      }
     } else {
       toast({
         title: "Erreur",
@@ -55,13 +68,15 @@ const PlayGame = () => {
   
   const {
     selectedPlayer,
-    votingPhase,
+    gamePhase,
     votes,
     showConfetti,
     gameResults,
     handleVote,
     confirmVote,
     getWinningPlayer,
+    startChallengePhase,
+    completeChallengePhase,
     resetVotingState,
     setGameResults
   } = useGameVotes({ players: gameData?.players || [] });
@@ -75,7 +90,7 @@ const PlayGame = () => {
     } else {
       setGameOver(true);
       
-      // Save game results to session storage for history viewing
+      // Sauvegarder l'historique de la partie
       const gameHistory = JSON.parse(sessionStorage.getItem('gameHistory') || '[]');
       const newGameHistory = [
         ...gameHistory,
@@ -95,10 +110,21 @@ const PlayGame = () => {
     if (!gameData) return;
     confirmVote(gameData.questions[currentQuestionIndex]);
   };
+
+  const handleResultsNext = () => {
+    // Commencer la phase de gage
+    startChallengePhase();
+  };
+
+  const handleChallengeComplete = () => {
+    // Terminer la phase de gage et passer à la question suivante
+    completeChallengePhase();
+    nextQuestion();
+  };
   
   const winningPlayer = getWinningPlayer();
   
-  if (!gameData) {
+  if (!gameData || !currentPlayer) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Chargement du jeu...</p>
@@ -131,34 +157,43 @@ const PlayGame = () => {
           />
         </div>
         
-        {votingPhase ? (
+        {gamePhase === 'voting' && (
           <VotingPhase 
             players={gameData.players}
             selectedPlayer={selectedPlayer}
             handleVote={handleVote}
             confirmVote={handleConfirmVote}
           />
-        ) : (
+        )}
+        
+        {gamePhase === 'results' && (
           <ResultsPhase 
             players={gameData.players}
             votes={votes}
             currentQuestion={currentQuestion}
             winningPlayer={winningPlayer}
-            nextQuestion={nextQuestion}
+            nextQuestion={handleResultsNext}
+          />
+        )}
+
+        {gamePhase === 'challenge' && winningPlayer && (
+          <ChallengePhase
+            winner={winningPlayer}
+            players={gameData.players}
+            currentPlayer={currentPlayer}
+            onChallengeComplete={handleChallengeComplete}
           />
         )}
       </div>
       
-      {currentPlayer && (
-        <MessagingDialog
-          open={isMessagingOpen}
-          onOpenChange={setIsMessagingOpen}
-          gameId={gameCode}
-          currentUserId={currentPlayer.id}
-          currentUserName={currentPlayer.name}
-          players={gameData.players}
-        />
-      )}
+      <MessagingDialog
+        open={isMessagingOpen}
+        onOpenChange={setIsMessagingOpen}
+        gameId={gameCode}
+        currentUserId={currentPlayer.id}
+        currentUserName={currentPlayer.name}
+        players={gameData.players}
+      />
     </div>
   );
 };

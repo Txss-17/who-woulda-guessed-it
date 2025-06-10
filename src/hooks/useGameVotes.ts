@@ -8,32 +8,34 @@ interface UseGameVotesProps {
 
 export const useGameVotes = ({ players }: UseGameVotesProps) => {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-  const [votingPhase, setVotingPhase] = useState(true);
+  const [gamePhase, setGamePhase] = useState<'voting' | 'results' | 'challenge'>('voting');
   const [votes, setVotes] = useState<Record<string, number>>({});
   const [showConfetti, setShowConfetti] = useState(false);
   const [gameResults, setGameResults] = useState<any[]>([]);
 
   const handleVote = (player: Player) => {
-    if (!votingPhase) return;
+    if (gamePhase !== 'voting') return;
     setSelectedPlayer(player);
   };
 
   const confirmVote = (currentQuestion: string) => {
-    if (!selectedPlayer || !votingPhase) return;
+    if (!selectedPlayer || gamePhase !== 'voting') return;
     
-    setVotingPhase(false);
+    setGamePhase('results');
     
+    // Simuler les votes des autres joueurs (remplacer par la vraie logique)
     const newVotes: Record<string, number> = {};
     
     players.forEach(player => {
-      newVotes[player.id] = Math.floor(Math.random() * 4);
+      newVotes[player.id] = Math.floor(Math.random() * 3);
     });
     
+    // Ajouter le vote du joueur actuel
     newVotes[selectedPlayer.id] = (newVotes[selectedPlayer.id] || 0) + 1;
     
     setVotes(newVotes);
     
-    // Save the results of this question
+    // Sauvegarder le résultat de cette question
     const questionResult = {
       questionText: currentQuestion,
       votes: Object.entries(newVotes).map(([playerId, count]) => {
@@ -68,8 +70,17 @@ export const useGameVotes = ({ players }: UseGameVotesProps) => {
     return players.find(p => p.id === playerIdWithMaxVotes) || null;
   };
 
+  const startChallengePhase = () => {
+    setGamePhase('challenge');
+  };
+
+  const completeChallengePhase = () => {
+    // Revenir à la phase de vote pour la question suivante
+    resetVotingState();
+  };
+
   const resetVotingState = () => {
-    setVotingPhase(true);
+    setGamePhase('voting');
     setSelectedPlayer(null);
     setVotes({});
     setShowConfetti(false);
@@ -77,13 +88,15 @@ export const useGameVotes = ({ players }: UseGameVotesProps) => {
 
   return {
     selectedPlayer,
-    votingPhase,
+    gamePhase,
     votes,
     showConfetti,
     gameResults,
     handleVote,
     confirmVote,
     getWinningPlayer,
+    startChallengePhase,
+    completeChallengePhase,
     resetVotingState,
     setGameResults
   };

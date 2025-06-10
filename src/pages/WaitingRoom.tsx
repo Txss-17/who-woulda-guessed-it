@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import PlayerAvatar from '@/components/PlayerAvatar';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, Users, MessageSquare } from 'lucide-react';
+import { Clock, Users, MessageSquare, Play } from 'lucide-react';
 import MessagingDialog from '@/components/messaging/MessagingDialog';
 import { Player, UserStatus } from '@/types/onlineGame';
 
@@ -16,7 +16,7 @@ const WaitingRoom = () => {
   
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
-  const [isWaiting, setIsWaiting] = useState(true);
+  const [isHost, setIsHost] = useState(false);
   const [isMessagingOpen, setIsMessagingOpen] = useState(false);
   
   useEffect(() => {
@@ -39,60 +39,69 @@ const WaitingRoom = () => {
     };
     setCurrentPlayer(currentPlayerWithStatus);
     
-    // Simuler l'ajout de joueurs à intervalles réguliers
-    const fakePlayerNames = ['Alex', 'Sam', 'Jordan', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Jamie'];
-    const statuses: UserStatus[] = ['online', 'online', 'away', 'online'];
-    
-    setPlayers([currentPlayerWithStatus]);
-    
-    let addedPlayers = 1;
-    const interval = setInterval(() => {
-      if (addedPlayers < 5) {
-        const newPlayer: Player = {
-          id: Date.now() + addedPlayers + '',
-          name: fakePlayerNames[addedPlayers - 1],
-          status: statuses[addedPlayers % statuses.length],
-        };
-        setPlayers(prev => [...prev, newPlayer]);
-        addedPlayers++;
-      } else {
-        clearInterval(interval);
+    // Vérifier les données de la partie existantes
+    const gameDataStr = sessionStorage.getItem('gameData');
+    if (gameDataStr) {
+      const gameData = JSON.parse(gameDataStr);
+      if (gameData.gameCode === gameCode) {
+        // Ajouter le joueur à la liste s'il n'y est pas déjà
+        const existingPlayers = gameData.players || [];
+        const playerExists = existingPlayers.some((p: Player) => p.id === currentPlayerWithStatus.id);
         
-        // Simuler le démarrage du jeu après quelques secondes
-        setTimeout(() => {
-          setIsWaiting(false);
-          
-          setTimeout(() => {
-            // Stocker les données du jeu pour la page de jeu
-            const finalPlayers = [
-              ...players, 
-              {
-                id: Date.now() + 5 + '',
-                name: fakePlayerNames[4],
-                status: 'online' as UserStatus
-              }
-            ];
-            
-            sessionStorage.setItem('gameData', JSON.stringify({
-              gameCode,
-              players: finalPlayers,
-              questions: [
-                "...dormir au boulot?",
-                "...oublier l'anniversaire de son/sa partenaire?",
-                "...devenir célèbre sur TikTok?",
-                "...dépenser tout son argent en une journée?",
-                "...adopter 10 chats?"
-              ]
-            }));
-            
-            navigate(`/play/${gameCode}`);
-          }, 1500);
-        }, 3000);
+        if (!playerExists) {
+          const updatedPlayers = [...existingPlayers, currentPlayerWithStatus];
+          const updatedGameData = { ...gameData, players: updatedPlayers };
+          sessionStorage.setItem('gameData', JSON.stringify(updatedGameData));
+          setPlayers(updatedPlayers);
+        } else {
+          setPlayers(existingPlayers);
+        }
+        
+        // Vérifier si c'est l'hôte (premier joueur)
+        setIsHost(existingPlayers[0]?.id === currentPlayerWithStatus.id);
       }
-    }, 1500);
+    } else {
+      // Créer une nouvelle partie avec ce joueur comme hôte
+      const newGameData = {
+        gameCode,
+        players: [currentPlayerWithStatus],
+        questions: [
+          "...dormir au boulot?",
+          "...oublier l'anniversaire de son/sa partenaire?",
+          "...devenir célèbre sur TikTok?",
+          "...dépenser tout son argent en une journée?",
+          "...adopter 10 chats?"
+        ]
+      };
+      sessionStorage.setItem('gameData', JSON.stringify(newGameData));
+      setPlayers([currentPlayerWithStatus]);
+      setIsHost(true);
+    }
+    
+    // Simuler l'arrivée de nouveaux joueurs en temps réel
+    const interval = setInterval(() => {
+      const gameDataStr = sessionStorage.getItem('gameData');
+      if (gameDataStr) {
+        const gameData = JSON.parse(gameDataStr);
+        setPlayers(gameData.players || []);
+      }
+    }, 2000);
     
     return () => clearInterval(interval);
   }, [gameCode, navigate, toast]);
+
+  const startGame = () => {
+    if (players.length < 2) {
+      toast({
+        title: "Pas assez de joueurs",
+        description: "Il faut au moins 2 joueurs pour commencer",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    navigate(`/play/${gameCode}`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-8 px-4">
@@ -105,16 +114,10 @@ const WaitingRoom = () => {
           </div>
           
           <div className="mb-8">
-            {isWaiting ? (
-              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <Clock className="h-5 w-5 animate-spin-slow" />
-                <span>En attente du démarrage de la partie...</span>
-              </div>
-            ) : (
-              <div className="text-primary font-medium animate-pulse">
-                La partie va commencer...
-              </div>
-            )}
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+              <Clock className="h-5 w-5" />
+              <span>En attente de joueurs...</span>
+            </div>
           </div>
           
           <div className="mb-6">
@@ -138,6 +141,7 @@ const WaitingRoom = () => {
                   <span className="mt-2 text-sm truncate w-full text-center">
                     {player.name}
                     {player.id === currentPlayer?.id ? ' (toi)' : ''}
+                    {players[0]?.id === player.id ? ' (hôte)' : ''}
                   </span>
                 </div>
               ))}
@@ -145,6 +149,17 @@ const WaitingRoom = () => {
           </div>
           
           <div className="flex gap-2 justify-center">
+            {isHost && (
+              <Button
+                onClick={startGame}
+                disabled={players.length < 2}
+                className="gap-2"
+              >
+                <Play className="h-4 w-4" />
+                Démarrer la partie
+              </Button>
+            )}
+            
             <Button
               variant="outline"
               onClick={() => {
