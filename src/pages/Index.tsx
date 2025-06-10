@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Zap, Users, Heart, Smile, PartyPopper, Plus, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import PartyCreationDialog from "@/components/party/PartyCreationDialog";
+import JoinByCodeCard from "@/components/home/JoinByCodeCard";
 
 const gameTypes = [
   {
@@ -59,7 +60,7 @@ const Index = () => {
             Le jeu qui révèle qui vous êtes vraiment
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <Link to="/quick-game">
               <Button size="lg" className="w-full sm:w-auto">
                 <Zap className="mr-2 h-5 w-5" />
@@ -82,6 +83,11 @@ const Index = () => {
                 </Button>
               </PartyCreationDialog>
             )}
+          </div>
+
+          {/* Section pour rejoindre avec un code */}
+          <div className="max-w-md mx-auto">
+            <JoinByCodeCard />
           </div>
         </div>
 
