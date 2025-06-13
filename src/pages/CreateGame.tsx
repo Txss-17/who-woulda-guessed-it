@@ -2,244 +2,250 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { 
-  ChevronLeft, 
-  Settings,
-  Play,
-  Plus,
-  MessageSquare
-} from 'lucide-react';
+import { Share2, Copy, QrCode, ChevronLeft, Users } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import QRCodeDisplay from '@/components/QRCodeDisplay';
-import PlayerAvatar from '@/components/PlayerAvatar';
-import MessagingDialog from '@/components/messaging/MessagingDialog';
-import { Player } from '@/types/onlineGame';
-
-// Données fictives pour simuler des joueurs qui rejoignent
-const fakePlayers: Player[] = [
-  { id: '1', name: 'Alex', avatar: undefined, status: 'online' },
-  { id: '2', name: 'Sam', avatar: undefined, status: 'online' },
-  { id: '3', name: 'Jordan', avatar: undefined, status: 'away' },
-  { id: '4', name: 'Taylor', avatar: undefined, status: 'online' },
-];
-
-const predefinedQuestions = [
-  "...dormir au boulot?",
-  "...oublier l'anniversaire de son/sa partenaire?",
-  "...devenir célèbre sur TikTok?",
-  "...dépenser tout son argent en une journée?",
-  "...adopter 10 chats?",
-  "...quitter son travail pour voyager?",
-  "...se perdre même avec un GPS?",
-  "...gagner à la loterie et tout perdre en un an?",
-  "...faire une gaffe embarrassante en public?",
-  "...survivre à une apocalypse zombie?"
-];
+import ShareGameDialog from '@/components/quick-game/ShareGameDialog';
+import { Blob, BackgroundDecoration } from '@/components/DecorativeElements';
 
 const CreateGame = () => {
   const { gameCode } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
-  const [availableQuestions, setAvailableQuestions] = useState<string[]>(predefinedQuestions);
-  const [isMessagingOpen, setIsMessagingOpen] = useState(false);
-  const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
+  const [hostName, setHostName] = useState('');
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [showQR, setShowQR] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [gameCreated, setGameCreated] = useState(false);
+
+  const gameUrl = `${window.location.origin}/join/${gameCode}`;
 
   useEffect(() => {
-    // Get current player data or create it if it doesn't exist
-    const playerDataStr = sessionStorage.getItem('playerData');
-    let playerData;
-    
-    if (playerDataStr) {
-      playerData = JSON.parse(playerDataStr);
-    } else {
-      playerData = {
-        name: 'Hôte',
-        id: Date.now().toString(),
-        gameCode
-      };
-      sessionStorage.setItem('playerData', JSON.stringify(playerData));
-    }
-    
-    const currentPlayerWithStatus: Player = {
-      ...playerData,
-      status: 'online',
-    };
-    
-    setCurrentPlayer(currentPlayerWithStatus);
-    setPlayers([currentPlayerWithStatus]);
-    
-    // Simuler des joueurs qui rejoignent progressivement
-    const timer = setInterval(() => {
-      if (players.length < fakePlayers.length) {
-        setPlayers(prev => [...prev, fakePlayers[prev.length]]);
-      } else {
-        clearInterval(timer);
+    // Vérifier si une partie existe déjà avec ce code
+    const existingGameData = sessionStorage.getItem('gameData');
+    if (existingGameData) {
+      const gameData = JSON.parse(existingGameData);
+      if (gameData.gameCode === gameCode) {
+        setGameCreated(true);
+        // Récupérer le nom de l'hôte
+        const hostPlayer = gameData.players[0];
+        if (hostPlayer) {
+          setHostName(hostPlayer.name);
+        }
       }
-    }, 1500);
+    }
+  }, [gameCode]);
 
-    return () => clearInterval(timer);
-  }, [gameCode, players.length]);
+  const handleCreateGame = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!hostName.trim()) {
+      toast({
+        title: "Nom requis",
+        description: "Entre ton nom pour créer la partie",
+        variant: "destructive"
+      });
+      return;
+    }
 
-  const addQuestion = (question: string) => {
-    setSelectedQuestions(prev => [...prev, question]);
-    setAvailableQuestions(prev => prev.filter(q => q !== question));
-  };
+    setIsCreating(true);
 
-  const removeQuestion = (question: string) => {
-    setSelectedQuestions(prev => prev.filter(q => q !== question));
-    setAvailableQuestions(prev => [...prev, question]);
-  };
+    try {
+      // Créer les données de l'hôte
+      const hostPlayer = {
+        id: Date.now().toString(),
+        name: hostName.trim(),
+        status: 'online' as const,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(hostName.trim())}&background=6366f1&color=fff`
+      };
 
-  const startGame = () => {
-    if (selectedQuestions.length > 0 && players.length > 0) {
-      // Enregistrer les données du jeu dans sessionStorage pour y accéder dans la page de jeu
-      sessionStorage.setItem('gameData', JSON.stringify({
+      // Créer les données de la partie avec l'hôte déjà inclus
+      const gameData = {
         gameCode,
-        players,
-        questions: selectedQuestions
-      }));
-      navigate(`/play/${gameCode}`);
+        players: [hostPlayer],
+        questions: [
+          "Qui est le plus susceptible de dormir au boulot?",
+          "Qui est le plus susceptible d'oublier l'anniversaire de son/sa partenaire?",
+          "Qui est le plus susceptible de devenir célèbre sur TikTok?",
+          "Qui est le plus susceptible de dépenser tout son argent en une journée?",
+          "Qui est le plus susceptible d'adopter 10 chats?"
+        ],
+        aiGenerated: false
+      };
+
+      // Sauvegarder les données de la partie
+      sessionStorage.setItem('gameData', JSON.stringify(gameData));
+      
+      // Sauvegarder les données du joueur (hôte)
+      sessionStorage.setItem('playerData', JSON.stringify(hostPlayer));
+
+      setGameCreated(true);
+      
+      toast({
+        title: "Partie créée !",
+        description: "Partage le code avec tes amis pour qu'ils rejoignent"
+      });
+
+      // Rediriger vers la salle d'attente après un court délai
+      setTimeout(() => {
+        navigate(`/waiting-room/${gameCode}`);
+      }, 2000);
+
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer la partie. Réessaie.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreating(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4">
-      <div className="container mx-auto max-w-4xl">
-        <div className="flex justify-between items-center mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
-          >
-            <ChevronLeft className="mr-2 h-4 w-4" /> Retour
-          </Button>
-          
-          {currentPlayer && players.length > 1 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsMessagingOpen(true)}
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Messages
-            </Button>
-          )}
-        </div>
+  const copyGameCode = () => {
+    navigator.clipboard.writeText(gameCode || '');
+    toast({
+      title: "Code copié !",
+      description: "Le code de la partie a été copié dans le presse-papiers"
+    });
+  };
+
+  const copyGameLink = () => {
+    navigator.clipboard.writeText(gameUrl);
+    toast({
+      title: "Lien copié !",
+      description: "Le lien de la partie a été copié dans le presse-papiers"
+    });
+  };
+
+  if (gameCreated) {
+    return (
+      <div className="relative min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4 overflow-hidden">
+        <Blob color="primary" position="top-left" size="md" className="opacity-40" />
+        <Blob color="accent" position="bottom-right" size="md" className="opacity-40" />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-6">Créer une partie</h1>
+        <div className="container mx-auto max-w-md relative z-10">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="h-8 w-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Partie créée !</h1>
+            <p className="text-muted-foreground">
+              Partage le code ou le lien avec tes amis
+            </p>
+          </div>
+
+          <Card className="p-6 shadow-lg relative overflow-hidden mb-6">
+            <BackgroundDecoration variant="minimal" position="bottom-right" className="opacity-10" />
             
-            <Card className="p-6 mb-8">
-              <h2 className="text-xl font-bold mb-4">Joueurs ({players.length})</h2>
-              
-              <div className="flex flex-wrap gap-3 mb-4">
-                {players.map(player => (
-                  <PlayerAvatar
-                    key={player.id}
-                    name={player.name}
-                    image={player.avatar}
-                    size="md"
-                    status={player.status}
-                  />
-                ))}
-                {players.length < 10 && (
-                  <div className="h-12 w-12 rounded-full border-2 border-dashed border-muted-foreground/50 flex items-center justify-center">
-                    <Plus className="h-5 w-5 text-muted-foreground/50" />
-                  </div>
-                )}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full mb-4">
+                <span className="font-bold">Code:</span>
+                <span className="text-2xl text-primary font-bold tracking-wider">{gameCode}</span>
               </div>
               
-              <p className="text-sm text-muted-foreground mb-4">
-                En attente de joueurs... Partagez le code ou le QR code pour inviter plus de joueurs.
-              </p>
-            </Card>
-            
-            <Card className="p-6 mb-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Questions sélectionnées ({selectedQuestions.length})</h2>
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4 mr-2" /> Options
+              <div className="flex gap-2 justify-center mb-4">
+                <Button onClick={copyGameCode} variant="outline" size="sm">
+                  <Copy className="h-4 w-4 mr-1" /> Copier le code
+                </Button>
+                <Button onClick={copyGameLink} variant="outline" size="sm">
+                  <Copy className="h-4 w-4 mr-1" /> Copier le lien
                 </Button>
               </div>
-              
-              {selectedQuestions.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">
-                  Sélectionnez des questions dans la liste ci-dessous
-                </p>
-              ) : (
-                <ul className="space-y-2">
-                  {selectedQuestions.map(question => (
-                    <li 
-                      key={question} 
-                      className="flex justify-between items-center p-2 bg-secondary rounded-md"
-                    >
-                      <span>Qui est le plus susceptible de {question}</span>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => removeQuestion(question)}
-                      >
-                        Retirer
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Card>
-            
-            <Card className="p-6">
-              <h2 className="text-xl font-bold mb-4">Questions disponibles</h2>
-              
-              <ul className="space-y-2 max-h-64 overflow-y-auto pr-2">
-                {availableQuestions.map(question => (
-                  <li 
-                    key={question} 
-                    className="flex justify-between items-center p-2 hover:bg-secondary/50 rounded-md cursor-pointer"
-                    onClick={() => addQuestion(question)}
-                  >
-                    <span>Qui est le plus susceptible de {question}</span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                    >
-                      Ajouter
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          </div>
-          
-          <div className="flex flex-col">
-            <QRCodeDisplay gameCode={gameCode || ''} />
-            
-            <div className="flex-1 flex items-end justify-center mt-8">
-              <Button 
-                size="lg" 
-                className="gap-2"
-                disabled={selectedQuestions.length === 0 || players.length === 0}
-                onClick={startGame}
-              >
-                <Play className="h-5 w-5" />
-                Commencer la partie
-              </Button>
+
+              <div className="flex gap-2 justify-center">
+                <Button onClick={() => setShowQR(!showQR)} variant="ghost" size="sm">
+                  <QrCode className="h-4 w-4 mr-1" /> 
+                  {showQR ? 'Masquer QR' : 'Afficher QR'}
+                </Button>
+                <Button onClick={() => setIsShareOpen(true)} variant="ghost" size="sm">
+                  <Share2 className="h-4 w-4 mr-1" /> Partager
+                </Button>
+              </div>
             </div>
+
+            {showQR && (
+              <div className="flex justify-center mb-4">
+                <QRCodeDisplay value={gameUrl} />
+              </div>
+            )}
+          </Card>
+
+          <div className="flex gap-2 justify-center">
+            <Button 
+              onClick={() => navigate(`/waiting-room/${gameCode}`)}
+              className="gap-2"
+            >
+              Aller en salle d'attente
+            </Button>
           </div>
         </div>
-      </div>
-      
-      {currentPlayer && (
-        <MessagingDialog
-          open={isMessagingOpen}
-          onOpenChange={setIsMessagingOpen}
-          gameId={gameCode}
-          currentUserId={currentPlayer.id}
-          currentUserName={currentPlayer.name}
-          players={players}
+
+        <ShareGameDialog
+          isOpen={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+          gameCode={gameCode || ''}
+          gameUrl={gameUrl}
         />
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4 overflow-hidden">
+      <Blob color="primary" position="top-left" size="md" className="opacity-40" />
+      <Blob color="accent" position="bottom-right" size="md" className="opacity-40" />
+      <BackgroundDecoration variant="minimal" position="bottom-left" className="opacity-30" />
+      
+      <div className="container mx-auto max-w-md relative z-10">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/')}
+          className="mb-6"
+        >
+          <ChevronLeft className="mr-2 h-4 w-4" /> Retour
+        </Button>
+        
+        <Card className="p-6 shadow-lg relative overflow-hidden">
+          <BackgroundDecoration variant="minimal" position="bottom-right" className="opacity-10" />
+          
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold mb-2">Créer une partie</h1>
+            <div className="inline-flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full">
+              <span className="font-bold">Code:</span>
+              <span className="text-xl text-primary font-bold tracking-wider">{gameCode}</span>
+            </div>
+          </div>
+          
+          <form onSubmit={handleCreateGame}>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="hostName" className="block text-sm font-medium mb-1">
+                  Ton nom (hôte)
+                </label>
+                <Input
+                  id="hostName"
+                  placeholder="Entre ton nom"
+                  value={hostName}
+                  onChange={(e) => setHostName(e.target.value)}
+                  disabled={isCreating}
+                />
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={isCreating || !hostName.trim()}
+              >
+                {isCreating ? 'Création...' : 'Créer la partie'}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 };

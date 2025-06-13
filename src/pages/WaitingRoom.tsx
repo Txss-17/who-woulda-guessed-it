@@ -39,51 +39,51 @@ const WaitingRoom = () => {
     };
     setCurrentPlayer(currentPlayerWithStatus);
     
-    // Vérifier les données de la partie existantes
+    // Récupérer les données de la partie
     const gameDataStr = sessionStorage.getItem('gameData');
     if (gameDataStr) {
       const gameData = JSON.parse(gameDataStr);
       if (gameData.gameCode === gameCode) {
-        // Ajouter le joueur à la liste s'il n'y est pas déjà
-        const existingPlayers = gameData.players || [];
-        const playerExists = existingPlayers.some((p: Player) => p.id === currentPlayerWithStatus.id);
+        // Vérifier si le joueur actuel fait partie de la partie
+        const playerExists = gameData.players.some((p: Player) => p.id === currentPlayerWithStatus.id);
         
-        if (!playerExists) {
-          const updatedPlayers = [...existingPlayers, currentPlayerWithStatus];
-          const updatedGameData = { ...gameData, players: updatedPlayers };
-          sessionStorage.setItem('gameData', JSON.stringify(updatedGameData));
-          setPlayers(updatedPlayers);
+        if (playerExists) {
+          setPlayers(gameData.players);
+          // Vérifier si c'est l'hôte (premier joueur)
+          setIsHost(gameData.players[0]?.id === currentPlayerWithStatus.id);
         } else {
-          setPlayers(existingPlayers);
+          toast({
+            title: "Erreur",
+            description: "Tu ne fais pas partie de cette partie",
+            variant: "destructive"
+          });
+          navigate('/');
         }
-        
-        // Vérifier si c'est l'hôte (premier joueur)
-        setIsHost(existingPlayers[0]?.id === currentPlayerWithStatus.id);
+      } else {
+        toast({
+          title: "Code invalide",
+          description: "Cette partie n'existe pas",
+          variant: "destructive"
+        });
+        navigate('/');
       }
     } else {
-      // Créer une nouvelle partie avec ce joueur comme hôte
-      const newGameData = {
-        gameCode,
-        players: [currentPlayerWithStatus],
-        questions: [
-          "...dormir au boulot?",
-          "...oublier l'anniversaire de son/sa partenaire?",
-          "...devenir célèbre sur TikTok?",
-          "...dépenser tout son argent en une journée?",
-          "...adopter 10 chats?"
-        ]
-      };
-      sessionStorage.setItem('gameData', JSON.stringify(newGameData));
-      setPlayers([currentPlayerWithStatus]);
-      setIsHost(true);
+      toast({
+        title: "Erreur",
+        description: "Données de partie non trouvées",
+        variant: "destructive"
+      });
+      navigate('/');
     }
     
-    // Simuler l'arrivée de nouveaux joueurs en temps réel
+    // Simuler la mise à jour en temps réel des joueurs
     const interval = setInterval(() => {
       const gameDataStr = sessionStorage.getItem('gameData');
       if (gameDataStr) {
         const gameData = JSON.parse(gameDataStr);
-        setPlayers(gameData.players || []);
+        if (gameData.gameCode === gameCode) {
+          setPlayers(gameData.players || []);
+        }
       }
     }, 2000);
     
