@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,61 @@ const PlayerNameSetup = () => {
   
   const [playerName, setPlayerName] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [currentPlayerName, setCurrentPlayerName] = useState('');
+
+  useEffect(() => {
+    // Vérifier que le joueur a bien rejoint une partie
+    const playerDataStr = sessionStorage.getItem('playerData');
+    const gameDataStr = sessionStorage.getItem('gameData');
+    
+    if (!playerDataStr || !gameDataStr || !gameCode) {
+      toast({
+        title: "Erreur",
+        description: "Données de partie non trouvées",
+        variant: "destructive"
+      });
+      navigate('/');
+      return;
+    }
+
+    try {
+      const playerData = JSON.parse(playerDataStr);
+      const gameData = JSON.parse(gameDataStr);
+      
+      // Vérifier que la partie correspond
+      if (gameData.gameCode !== gameCode) {
+        toast({
+          title: "Erreur",
+          description: "Code de partie incorrect",
+          variant: "destructive"
+        });
+        navigate('/');
+        return;
+      }
+
+      // Vérifier que le joueur fait partie de la partie
+      const playerExists = gameData.players?.some((p: any) => p.id === playerData.id);
+      if (!playerExists) {
+        toast({
+          title: "Erreur",
+          description: "Joueur non trouvé dans la partie",
+          variant: "destructive"
+        });
+        navigate('/');
+        return;
+      }
+
+      setCurrentPlayerName(playerData.name || '');
+      setPlayerName(playerData.name || '');
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les données",
+        variant: "destructive"
+      });
+      navigate('/');
+    }
+  }, [gameCode, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,73 +83,95 @@ const PlayerNameSetup = () => {
       return;
     }
 
+    if (playerName.trim().length < 2) {
+      toast({
+        title: "Nom trop court",
+        description: "Le nom doit contenir au moins 2 caractères",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsUpdating(true);
     
-    // Récupérer les données du joueur et de la partie
-    const playerDataStr = sessionStorage.getItem('playerData');
-    const gameDataStr = sessionStorage.getItem('gameData');
-    
-    if (!playerDataStr || !gameDataStr) {
-      toast({
-        title: "Erreur",
-        description: "Données non trouvées",
-        variant: "destructive"
-      });
-      navigate('/');
-      return;
-    }
-
-    const playerData = JSON.parse(playerDataStr);
-    const gameData = JSON.parse(gameDataStr);
-    
-    // Vérifier que le nom n'est pas déjà pris
-    const nameExists = gameData.players.some(
-      (p: any) => p.name.toLowerCase() === playerName.trim().toLowerCase() && p.id !== playerData.id
-    );
-    
-    if (nameExists) {
-      setIsUpdating(false);
-      toast({
-        title: "Nom déjà pris",
-        description: "Ce nom est déjà utilisé par un autre joueur",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setTimeout(() => {
-      // Mettre à jour le nom du joueur
-      const updatedPlayerData = {
-        ...playerData,
-        name: playerName.trim()
-      };
+    try {
+      // Récupérer les données du joueur et de la partie
+      const playerDataStr = sessionStorage.getItem('playerData');
+      const gameDataStr = sessionStorage.getItem('gameData');
       
-      // Mettre à jour la liste des joueurs dans la partie
-      const updatedPlayers = gameData.players.map((p: any) => 
-        p.id === playerData.id ? { ...p, name: playerName.trim() } : p
+      if (!playerDataStr || !gameDataStr) {
+        throw new Error('Données manquantes');
+      }
+
+      const playerData = JSON.parse(playerDataStr);
+      const gameData = JSON.parse(gameDataStr);
+      
+      // Vérifier que le nom n'est pas déjà pris
+      const nameExists = gameData.players?.some(
+        (p: any) => p.name.toLowerCase().trim() === playerName.trim().toLowerCase() && p.id !== playerData.id
       );
       
-      const updatedGameData = {
-        ...gameData,
-        players: updatedPlayers
-      };
-      
-      // Sauvegarder les données mises à jour
-      sessionStorage.setItem('playerData', JSON.stringify(updatedPlayerData));
-      sessionStorage.setItem('gameData', JSON.stringify(updatedGameData));
-      
-      setIsUpdating(false);
-      
-      toast({
-        title: "Nom défini !",
-        description: `Bienvenue ${playerName.trim()}`
-      });
-      
-      // Rediriger vers la salle d'attente
+      if (nameExists) {
+        setIsUpdating(false);
+        toast({
+          title: "Nom déjà pris",
+          description: "Ce nom est déjà utilisé par un autre joueur",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Simulation d'une mise à jour
       setTimeout(() => {
-        navigate(`/waiting-room/${gameCode}`);
+        try {
+          // Mettre à jour le nom du joueur
+          const updatedPlayerData = {
+            ...playerData,
+            name: playerName.trim()
+          };
+          
+          // Mettre à jour la liste des joueurs dans la partie
+          const updatedPlayers = gameData.players?.map((p: any) => 
+            p.id === playerData.id ? { ...p, name: playerName.trim() } : p
+          ) || [];
+          
+          const updatedGameData = {
+            ...gameData,
+            players: updatedPlayers
+          };
+          
+          // Sauvegarder les données mises à jour
+          sessionStorage.setItem('playerData', JSON.stringify(updatedPlayerData));
+          sessionStorage.setItem('gameData', JSON.stringify(updatedGameData));
+          
+          setIsUpdating(false);
+          
+          toast({
+            title: "Nom défini !",
+            description: `Bienvenue ${playerName.trim()}`
+          });
+          
+          // Rediriger vers la salle d'attente
+          setTimeout(() => {
+            navigate(`/waiting-room/${gameCode}`);
+          }, 1000);
+        } catch (error) {
+          setIsUpdating(false);
+          toast({
+            title: "Erreur",
+            description: "Impossible de sauvegarder le nom",
+            variant: "destructive"
+          });
+        }
       }, 1000);
-    }, 1000);
+    } catch (error) {
+      setIsUpdating(false);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -144,14 +221,14 @@ const PlayerNameSetup = () => {
                   autoFocus
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  Maximum 20 caractères
+                  Entre 2 et 20 caractères
                 </p>
               </div>
               
               <Button 
                 type="submit" 
                 className="w-full gap-2"
-                disabled={isUpdating || !playerName.trim()}
+                disabled={isUpdating || !playerName.trim() || playerName.trim().length < 2}
               >
                 {isUpdating ? (
                   <>

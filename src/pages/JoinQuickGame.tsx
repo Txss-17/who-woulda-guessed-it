@@ -18,75 +18,109 @@ const JoinQuickGame = () => {
   const [playerCount, setPlayerCount] = useState(0);
   
   useEffect(() => {
-    // Vérifier si la partie existe dans le sessionStorage
-    const storedGameData = sessionStorage.getItem('gameData');
-    if (storedGameData) {
-      const data = JSON.parse(storedGameData);
-      if (data.gameCode === gameCode) {
-        setGameData(data);
-        setPlayerCount(data.players?.length || 0);
-        
-        // Rejoindre automatiquement la partie
-        joinGameAutomatically(data);
-      } else {
-        toast({
-          title: "Partie introuvable",
-          description: "Cette partie n'existe pas ou a expiré",
-          variant: "destructive"
-        });
-        navigate('/');
-      }
-    } else {
+    if (!gameCode) {
       toast({
-        title: "Partie introuvable",
-        description: "Cette partie n'existe pas ou a expiré",
+        title: "Code manquant",
+        description: "Code de partie non fourni",
         variant: "destructive"
       });
       navigate('/');
+      return;
+    }
+
+    // Vérifier si la partie existe dans le sessionStorage
+    const storedGameData = sessionStorage.getItem('gameData');
+    if (storedGameData) {
+      try {
+        const data = JSON.parse(storedGameData);
+        if (data.gameCode === gameCode) {
+          setGameData(data);
+          setPlayerCount(data.players?.length || 0);
+          
+          // Rejoindre automatiquement la partie
+          joinGameAutomatically(data);
+        } else {
+          handleInvalidGame();
+        }
+      } catch (error) {
+        handleInvalidGame();
+      }
+    } else {
+      handleInvalidGame();
     }
   }, [gameCode, navigate, toast]);
+
+  const handleInvalidGame = () => {
+    toast({
+      title: "Partie introuvable",
+      description: "Cette partie n'existe pas ou a expiré",
+      variant: "destructive"
+    });
+    navigate('/');
+  };
 
   const joinGameAutomatically = (gameData: any) => {
     setIsJoining(true);
     
     // Générer automatiquement un nom de joueur temporaire
-    const playerNumber = gameData.players.length + 1;
+    const playerNumber = (gameData.players?.length || 0) + 1;
     const temporaryName = `Joueur ${playerNumber}`;
     
     // Créer le nouveau joueur
     const newPlayer = {
-      id: Date.now(),
-      name: temporaryName
+      id: Date.now().toString(),
+      name: temporaryName,
+      status: 'online' as const,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(temporaryName)}&background=10b981&color=fff`
     };
     
     setTimeout(() => {
-      const updatedGameData = {
-        ...gameData,
-        players: [...gameData.players, newPlayer]
-      };
-      
-      // Mettre à jour les données de la partie
-      sessionStorage.setItem('gameData', JSON.stringify(updatedGameData));
-      sessionStorage.setItem('playerData', JSON.stringify(newPlayer));
-      
-      setIsJoining(false);
-      setIsJoined(true);
-      
-      toast({
-        title: "Partie rejointe !",
-        description: "Tu peux maintenant définir ton nom"
-      });
-      
-      // Rediriger vers la page de définition du nom
-      setTimeout(() => {
-        navigate(`/player-name-setup/${gameCode}`);
-      }, 1500);
-      
+      try {
+        const updatedGameData = {
+          ...gameData,
+          players: [...(gameData.players || []), newPlayer]
+        };
+        
+        // Mettre à jour les données de la partie
+        sessionStorage.setItem('gameData', JSON.stringify(updatedGameData));
+        sessionStorage.setItem('playerData', JSON.stringify(newPlayer));
+        
+        setIsJoining(false);
+        setIsJoined(true);
+        setPlayerCount(updatedGameData.players.length);
+        
+        toast({
+          title: "Partie rejointe !",
+          description: "Tu peux maintenant définir ton nom"
+        });
+        
+        // Rediriger vers la page de définition du nom
+        setTimeout(() => {
+          navigate(`/player-name-setup/${gameCode}`);
+        }, 1500);
+      } catch (error) {
+        setIsJoining(false);
+        toast({
+          title: "Erreur",
+          description: "Impossible de rejoindre la partie",
+          variant: "destructive"
+        });
+        navigate('/');
+      }
     }, 1000);
   };
 
   if (!gameData) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4 flex items-center justify-center">
+        <Card className="p-6">
+          <div className="text-center">
+            <Clock className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <p>Vérification de la partie...</p>
+          </div>
+        </Card>
+      </div>
+    );
   }
 
   return (
