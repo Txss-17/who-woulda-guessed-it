@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -169,7 +168,7 @@ const CreateGame = () => {
 
             {showQR && (
               <div className="flex justify-center mb-4">
-                <QRCodeDisplay value={gameUrl} />
+                <QRCodeDisplay gameCode={gameCode || ''} />
               </div>
             )}
           </Card>
@@ -185,10 +184,10 @@ const CreateGame = () => {
         </div>
 
         <ShareGameDialog
-          isOpen={isShareOpen}
-          onClose={() => setIsShareOpen(false)}
+          open={isShareOpen}
+          onOpenChange={setIsShareOpen}
           gameCode={gameCode || ''}
-          gameUrl={gameUrl}
+          gameData={{ gameCode, players: [], questions: [] }}
         />
       </div>
     );
