@@ -2,9 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { ChevronLeft, Users, UserCheck } from 'lucide-react';
+import { ChevronLeft, Users, UserCheck, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Blob, BackgroundDecoration } from '@/components/DecorativeElements';
 
@@ -13,8 +12,8 @@ const JoinQuickGame = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [playerName, setPlayerName] = useState('');
   const [isJoining, setIsJoining] = useState(false);
+  const [isJoined, setIsJoined] = useState(false);
   const [gameData, setGameData] = useState<any>(null);
   const [playerCount, setPlayerCount] = useState(0);
   
@@ -26,6 +25,9 @@ const JoinQuickGame = () => {
       if (data.gameCode === gameCode) {
         setGameData(data);
         setPlayerCount(data.players?.length || 0);
+        
+        // Rejoindre automatiquement la partie
+        joinGameAutomatically(data);
       } else {
         toast({
           title: "Partie introuvable",
@@ -44,36 +46,20 @@ const JoinQuickGame = () => {
     }
   }, [gameCode, navigate, toast]);
 
-  const handleJoinGame = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!playerName.trim()) {
-      toast({
-        title: "Nom requis",
-        description: "Entre ton nom pour rejoindre la partie",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!gameData) {
-      toast({
-        title: "Erreur",
-        description: "Données de la partie non trouvées",
-        variant: "destructive"
-      });
-      return;
-    }
-    
+  const joinGameAutomatically = (gameData: any) => {
     setIsJoining(true);
     
-    // Ajouter le joueur à la partie existante
+    // Générer automatiquement un nom de joueur
+    const playerNumber = gameData.players.length + 1;
+    const generatedName = `Joueur ${playerNumber}`;
+    
+    // Créer le nouveau joueur
+    const newPlayer = {
+      id: Date.now(),
+      name: generatedName
+    };
+    
     setTimeout(() => {
-      const newPlayer = {
-        id: Date.now(),
-        name: playerName.trim()
-      };
-      
       const updatedGameData = {
         ...gameData,
         players: [...gameData.players, newPlayer]
@@ -81,18 +67,20 @@ const JoinQuickGame = () => {
       
       // Mettre à jour les données de la partie
       sessionStorage.setItem('gameData', JSON.stringify(updatedGameData));
+      sessionStorage.setItem('playerData', JSON.stringify(newPlayer));
       
       setIsJoining(false);
+      setIsJoined(true);
       
       toast({
         title: "Partie rejointe !",
-        description: "Tu as rejoint la partie avec succès"
+        description: `Tu as rejoint la partie en tant que ${generatedName}`
       });
       
       // Rediriger vers la page de jeu
       setTimeout(() => {
         navigate(`/play/${gameCode}`);
-      }, 1000);
+      }, 1500);
       
     }, 1000);
   };
@@ -119,47 +107,53 @@ const JoinQuickGame = () => {
         <Card className="p-6 shadow-lg relative overflow-hidden">
           <BackgroundDecoration variant="minimal" position="bottom-right" className="opacity-10" />
           
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold mb-2">Rejoindre la partie rapide</h1>
-            <div className="inline-flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full">
-              <span className="font-bold">Code:</span>
-              <span className="text-xl text-primary font-bold tracking-wider">{gameCode}</span>
+          <div className="text-center space-y-6">
+            <div>
+              <h1 className="text-2xl font-bold mb-2">Rejoindre la partie rapide</h1>
+              <div className="inline-flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full">
+                <span className="font-bold">Code:</span>
+                <span className="text-xl text-primary font-bold tracking-wider">{gameCode}</span>
+              </div>
             </div>
             
-            <div className="flex items-center justify-center gap-1 mt-3 text-sm text-muted-foreground">
+            <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
               <Users className="h-4 w-4" />
               <span>{playerCount} joueurs dans la partie</span>
             </div>
-          </div>
-          
-          <form onSubmit={handleJoinGame}>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="playerName" className="block text-sm font-medium mb-1">
-                  Ton nom
-                </label>
-                <Input
-                  id="playerName"
-                  placeholder="Entre ton nom"
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  disabled={isJoining}
-                />
+
+            {isJoining && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-2 text-primary">
+                  <Clock className="h-5 w-5 animate-spin" />
+                  <span>Connexion en cours...</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Attribution automatique d'un nom de joueur...
+                </p>
               </div>
-              
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isJoining}
-              >
-                {isJoining ? (
-                  <>Connexion...</>
-                ) : (
-                  'Rejoindre la partie'
-                )}
-              </Button>
-            </div>
-          </form>
+            )}
+
+            {isJoined && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-2 text-green-600">
+                  <UserCheck className="h-5 w-5" />
+                  <span className="font-medium">Connecté avec succès !</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Redirection vers le jeu...
+                </p>
+              </div>
+            )}
+
+            {!isJoining && !isJoined && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-2 text-primary">
+                  <Clock className="h-5 w-5 animate-pulse" />
+                  <span>Préparation de la connexion...</span>
+                </div>
+              </div>
+            )}
+          </div>
         </Card>
       </div>
     </div>
