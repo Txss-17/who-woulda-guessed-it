@@ -49,14 +49,14 @@ const JoinQuickGame = () => {
   const joinGameAutomatically = (gameData: any) => {
     setIsJoining(true);
     
-    // Générer automatiquement un nom de joueur
+    // Générer automatiquement un nom de joueur temporaire
     const playerNumber = gameData.players.length + 1;
-    const generatedName = `Joueur ${playerNumber}`;
+    const temporaryName = `Joueur ${playerNumber}`;
     
     // Créer le nouveau joueur
     const newPlayer = {
       id: Date.now(),
-      name: generatedName
+      name: temporaryName
     };
     
     setTimeout(() => {
@@ -74,12 +74,12 @@ const JoinQuickGame = () => {
       
       toast({
         title: "Partie rejointe !",
-        description: `Tu as rejoint la partie en tant que ${generatedName}`
+        description: "Tu peux maintenant définir ton nom"
       });
       
-      // Rediriger vers la page de jeu
+      // Rediriger vers la page de définition du nom
       setTimeout(() => {
-        navigate(`/play/${gameCode}`);
+        navigate(`/player-name-setup/${gameCode}`);
       }, 1500);
       
     }, 1000);
@@ -128,7 +128,7 @@ const JoinQuickGame = () => {
                   <span>Connexion en cours...</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Attribution automatique d'un nom de joueur...
+                  Rejoindre la partie...
                 </p>
               </div>
             )}
@@ -140,7 +140,7 @@ const JoinQuickGame = () => {
                   <span className="font-medium">Connecté avec succès !</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Redirection vers le jeu...
+                  Redirection vers la définition du nom...
                 </p>
               </div>
             )}
