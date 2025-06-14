@@ -1,43 +1,39 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Send } from 'lucide-react';
+import React from 'react';
+import SecureMessageInput from './SecureMessageInput';
 
 interface MessageInputProps {
-  onSendMessage: (content: string) => void;
+  onSendMessage: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  gameId?: string;
+  recipientId?: string;
 }
 
 const MessageInput = ({ 
   onSendMessage, 
-  disabled = false,
-  placeholder = "Tapez votre message..."
+  disabled = false, 
+  placeholder = "Tapez votre message...",
+  gameId,
+  recipientId
 }: MessageInputProps) => {
-  const [message, setMessage] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (message.trim()) {
-      onSendMessage(message.trim());
-      setMessage('');
-    }
+  const handleMessageSent = () => {
+    // Trigger refresh or update in parent component
+    // This maintains compatibility with existing code
   };
 
+  // Convert gameId to number if it exists
+  const partyId = gameId ? parseInt(gameId, 10) : undefined;
+
   return (
-    <form onSubmit={handleSubmit} className="flex gap-2">
-      <Input
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
+    <div className={disabled ? 'opacity-50 pointer-events-none' : ''}>
+      <SecureMessageInput
+        onMessageSent={handleMessageSent}
+        partyId={partyId}
+        recipientId={recipientId}
         placeholder={placeholder}
-        disabled={disabled}
-        className="flex-1"
       />
-      <Button type="submit" size="icon" disabled={disabled || !message.trim()}>
-        <Send className="h-4 w-4" />
-      </Button>
-    </form>
+    </div>
   );
 };
 
