@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Link, Hash } from 'lucide-react';
+import { Link, Hash, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const JoinGameByCode = () => {
@@ -27,20 +27,67 @@ const JoinGameByCode = () => {
 
     setIsJoining(true);
     
+    const trimmedCode = gameCode.trim().toUpperCase();
+    
     // Simuler la vérification du code
     setTimeout(() => {
-      setIsJoining(false);
+      // Vérifier d'abord si c'est une partie rapide dans le sessionStorage
+      const storedGameData = sessionStorage.getItem('gameData');
+      if (storedGameData) {
+        try {
+          const data = JSON.parse(storedGameData);
+          if (data.gameCode === trimmedCode) {
+            setIsJoining(false);
+            toast({
+              title: "Partie rapide trouvée !",
+              description: "Redirection vers la partie..."
+            });
+            setTimeout(() => {
+              navigate(`/join-quick/${trimmedCode}`);
+            }, 500);
+            return;
+          }
+        } catch (error) {
+          console.log('Erreur lors de la vérification du sessionStorage:', error);
+        }
+      }
       
-      // Simuler la redirection vers la partie
+      // Créer une fausse partie en ligne pour la démo
+      const fakeOnlineGame = {
+        gameCode: trimmedCode,
+        players: [
+          {
+            id: 'host-1',
+            name: 'Hôte de la partie',
+            status: 'online',
+            avatar: `https://ui-avatars.com/api/?name=Hôte&background=10b981&color=fff`
+          }
+        ],
+        type: 'friendly',
+        status: 'waiting',
+        aiGenerated: true,
+        questions: [
+          "Qui est le plus susceptible de devenir célèbre ?",
+          "Qui est le plus susceptible d'oublier son anniversaire ?",
+          "Qui est le plus susceptible de voyager seul ?",
+          "Qui est le plus susceptible de devenir millionnaire ?",
+          "Qui est le plus susceptible de changer de carrière ?"
+        ]
+      };
+      
+      // Stocker la partie temporairement
+      sessionStorage.setItem('gameData', JSON.stringify(fakeOnlineGame));
+      
+      setIsJoining(false);
       toast({
-        title: "Code valide !",
+        title: "Partie trouvée !",
         description: "Redirection vers la partie..."
       });
       
       setTimeout(() => {
-        navigate(`/join/${gameCode.toUpperCase()}`);
-      }, 1000);
-    }, 1000);
+        navigate(`/join/${trimmedCode}`);
+      }, 500);
+    }, 1500);
   };
 
   const handlePasteFromClipboard = async () => {
@@ -51,8 +98,16 @@ const JoinGameByCode = () => {
       const codeMatch = text.match(/\/join\/([A-Z0-9]{4,8})/i) || text.match(/\/join-quick\/([A-Z0-9]{4,8})/i);
       if (codeMatch) {
         setGameCode(codeMatch[1].toUpperCase());
+        toast({
+          title: "Code collé !",
+          description: "Code extrait du lien"
+        });
       } else if (/^[A-Z0-9]{4,8}$/i.test(text.trim())) {
         setGameCode(text.trim().toUpperCase());
+        toast({
+          title: "Code collé !",
+          description: "Code de partie détecté"
+        });
       } else {
         toast({
           title: "Format invalide",
@@ -70,7 +125,7 @@ const JoinGameByCode = () => {
   };
 
   return (
-    <Card className="bg-gradient-to-br from-accent/5 to-primary/5 border-accent/20">
+    <Card className="bg-gradient-to-br from-accent/5 to-primary/5 border-accent/20 hover:shadow-lg transition-all duration-300">
       <CardHeader className="text-center">
         <CardTitle className="flex items-center justify-center gap-2">
           <Hash className="h-5 w-5 text-accent animate-pulse" />
@@ -85,11 +140,12 @@ const JoinGameByCode = () => {
         <form onSubmit={handleJoinByCode} className="space-y-4">
           <div className="flex gap-2">
             <Input
-              placeholder="CODE123 ou lien d'invitation"
+              placeholder="ABCD1234 ou lien d'invitation"
               value={gameCode}
               onChange={(e) => setGameCode(e.target.value.toUpperCase())}
-              className="flex-1 text-center font-mono text-lg tracking-wider"
+              className="flex-1 text-center font-mono text-lg tracking-wider transition-all duration-200 focus:scale-105"
               disabled={isJoining}
+              maxLength={8}
             />
             <Button
               type="button"
@@ -97,7 +153,7 @@ const JoinGameByCode = () => {
               size="icon"
               onClick={handlePasteFromClipboard}
               disabled={isJoining}
-              className="shrink-0"
+              className="shrink-0 hover:scale-110 transition-transform"
             >
               <Link className="h-4 w-4" />
             </Button>
@@ -105,10 +161,17 @@ const JoinGameByCode = () => {
           
           <Button 
             type="submit" 
-            className="w-full"
+            className="w-full transition-all duration-200 hover:scale-105"
             disabled={isJoining || !gameCode.trim()}
           >
-            {isJoining ? 'Connexion...' : 'Rejoindre la partie'}
+            {isJoining ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Recherche de la partie...
+              </>
+            ) : (
+              'Rejoindre la partie'
+            )}
           </Button>
         </form>
       </CardContent>

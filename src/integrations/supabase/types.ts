@@ -876,7 +876,7 @@ export type Database = {
     }
     Functions: {
       check_and_award_badges: {
-        Args: { user_uuid: string }
+        Args: Record<PropertyKey, never> | { user_uuid: string }
         Returns: undefined
       }
       generate_invite_code: {
@@ -884,7 +884,9 @@ export type Database = {
         Returns: string
       }
       update_user_stats: {
-        Args: { user_uuid: string; stat_name: string; increment_value?: number }
+        Args:
+          | Record<PropertyKey, never>
+          | { user_uuid: string; stat_name: string; increment_value?: number }
         Returns: undefined
       }
     }
