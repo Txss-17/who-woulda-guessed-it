@@ -9,9 +9,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Copy, Share2, QrCode, Users, Sparkles } from 'lucide-react';
+import { Copy, Share2, QrCode, Users, Sparkles, Link as LinkIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import QRCodeDisplay from '@/components/QRCodeDisplay';
+import QRCodeGenerator from '@/components/QRCodeGenerator';
 import { OnlineGame } from '@/types/onlineGame';
 
 interface ShareOnlineGameDialogProps {
@@ -54,23 +54,30 @@ const ShareOnlineGameDialog = ({ open, onOpenChange, game }: ShareOnlineGameDial
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-purple-700">
             <Sparkles className="h-5 w-5 text-primary animate-pulse" />
             Inviter des amis
           </DialogTitle>
           <DialogDescription>
-            Partage ce lien pour que tes amis rejoignent "{game.name}"
+            Partage ce QR code ou ce lien pour que tes amis rejoignent "{game.name}"
           </DialogDescription>
         </DialogHeader>
         
         {showQR ? (
           <div className="space-y-4 animate-fade-in">
-            <QRCodeDisplay gameCode={game.id} />
+            <div className="flex justify-center">
+              <QRCodeGenerator 
+                value={shareUrl}
+                size={200}
+                title={`QuiVote - ${game.name}`}
+              />
+            </div>
             <Button 
               variant="outline" 
               onClick={() => setShowQR(false)}
               className="w-full transition-all hover:scale-105"
             >
+              <LinkIcon className="h-4 w-4 mr-2" />
               Retour au lien
             </Button>
           </div>

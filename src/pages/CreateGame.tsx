@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -133,45 +134,54 @@ const CreateGame = () => {
             </div>
             <h1 className="text-2xl font-bold mb-2">Partie créée !</h1>
             <p className="text-muted-foreground">
-              Partage le code ou le lien avec tes amis
+              Partage le QR code ou le lien avec tes amis
             </p>
           </div>
 
-          <Card className="p-6 shadow-lg relative overflow-hidden mb-6">
-            <BackgroundDecoration variant="minimal" position="bottom-right" className="opacity-10" />
-            
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full mb-4">
-                <span className="font-bold">Code:</span>
-                <span className="text-2xl text-primary font-bold tracking-wider">{gameCode}</span>
-              </div>
-              
-              <div className="flex gap-2 justify-center mb-4">
-                <Button onClick={copyGameCode} variant="outline" size="sm">
-                  <Copy className="h-4 w-4 mr-1" /> Copier le code
-                </Button>
-                <Button onClick={copyGameLink} variant="outline" size="sm">
-                  <Copy className="h-4 w-4 mr-1" /> Copier le lien
-                </Button>
-              </div>
-
-              <div className="flex gap-2 justify-center">
-                <Button onClick={() => setShowQR(!showQR)} variant="ghost" size="sm">
-                  <QrCode className="h-4 w-4 mr-1" /> 
-                  {showQR ? 'Masquer QR' : 'Afficher QR'}
-                </Button>
-                <Button onClick={() => setIsShareOpen(true)} variant="ghost" size="sm">
-                  <Share2 className="h-4 w-4 mr-1" /> Partager
+          {showQR ? (
+            <div className="mb-6">
+              <QRCodeDisplay gameCode={gameCode || ''} />
+              <div className="flex justify-center mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowQR(false)}
+                  className="gap-2"
+                >
+                  Masquer QR Code
                 </Button>
               </div>
             </div>
+          ) : (
+            <Card className="p-6 shadow-lg relative overflow-hidden mb-6">
+              <BackgroundDecoration variant="minimal" position="bottom-right" className="opacity-10" />
+              
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full mb-4">
+                  <span className="font-bold">Code:</span>
+                  <span className="text-2xl text-primary font-bold tracking-wider">{gameCode}</span>
+                </div>
+                
+                <div className="flex gap-2 justify-center mb-4">
+                  <Button onClick={copyGameCode} variant="outline" size="sm">
+                    <Copy className="h-4 w-4 mr-1" /> Copier le code
+                  </Button>
+                  <Button onClick={copyGameLink} variant="outline" size="sm">
+                    <Copy className="h-4 w-4 mr-1" /> Copier le lien
+                  </Button>
+                </div>
 
-            {showQR && (
-              <div className="flex justify-center mb-4">
-                <QRCodeDisplay gameCode={gameCode || ''} />
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={() => setShowQR(true)} variant="ghost" size="sm">
+                    <QrCode className="h-4 w-4 mr-1" /> 
+                    Afficher QR Code
+                  </Button>
+                  <Button onClick={() => setIsShareOpen(true)} variant="ghost" size="sm">
+                    <Share2 className="h-4 w-4 mr-1" /> Partager
+                  </Button>
+                </div>
               </div>
-            )}
-          </Card>
+            </Card>
+          )}
 
           <div className="flex gap-2 justify-center">
             <Button 

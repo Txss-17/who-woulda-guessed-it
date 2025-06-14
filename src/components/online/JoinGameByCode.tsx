@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Link, Hash, Loader2 } from 'lucide-react';
+import { Link, Hash, Loader2, QrCode, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const JoinGameByCode = () => {
@@ -124,6 +123,15 @@ const JoinGameByCode = () => {
     }
   };
 
+  const handleQRScan = () => {
+    // Pour l'instant, on affiche un message informatif
+    // Dans une vraie app, on ouvrirait la caméra pour scanner
+    toast({
+      title: "Scanner QR Code",
+      description: "Fonctionnalité de scan QR disponible bientôt ! Pour l'instant, colle le lien ou entre le code manuellement.",
+    });
+  };
+
   return (
     <Card className="bg-gradient-to-br from-accent/5 to-primary/5 border-accent/20 hover:shadow-lg transition-all duration-300">
       <CardHeader className="text-center">
@@ -132,7 +140,7 @@ const JoinGameByCode = () => {
           Rejoindre avec un code
         </CardTitle>
         <p className="text-muted-foreground text-sm">
-          Entre le code de la partie ou colle un lien d'invitation
+          Entre le code, colle un lien ou scanne un QR code
         </p>
       </CardHeader>
       
@@ -157,6 +165,16 @@ const JoinGameByCode = () => {
             >
               <Link className="h-4 w-4" />
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={handleQRScan}
+              disabled={isJoining}
+              className="shrink-0 hover:scale-110 transition-transform"
+            >
+              <QrCode className="h-4 w-4" />
+            </Button>
           </div>
           
           <Button 
@@ -170,10 +188,25 @@ const JoinGameByCode = () => {
                 Recherche de la partie...
               </>
             ) : (
-              'Rejoindre la partie'
+              <>
+                <Camera className="h-4 w-4 mr-2" />
+                Rejoindre la partie
+              </>
             )}
           </Button>
         </form>
+        
+        <div className="mt-4 text-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleQRScan}
+            className="gap-2 text-primary hover:bg-primary/10"
+          >
+            <QrCode className="h-4 w-4" />
+            Scanner un QR code
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
