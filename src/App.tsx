@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QuestionsProvider } from "@/context/QuestionsContext";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import QuickGame from "./pages/QuickGame";
 import CreateGame from "./pages/CreateGame";
 import OnlineGame from "./pages/OnlineGame";
@@ -30,6 +31,7 @@ function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
               <Route path="/quick-game" element={<QuickGame />} />
               <Route path="/create-game" element={<CreateGame />} />
               <Route path="/online-game" element={<OnlineGame />} />
