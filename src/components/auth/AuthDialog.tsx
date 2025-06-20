@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -38,7 +37,8 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
         options: {
           data: {
             pseudo: pseudo
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/auth`
         }
       });
 
@@ -91,7 +91,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail);
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/auth`
+      });
       if (error) throw error;
       
       toast.success("Email de réinitialisation envoyé !");
@@ -109,7 +111,7 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: `${window.location.origin}/auth`
         }
       });
       if (error) throw error;
