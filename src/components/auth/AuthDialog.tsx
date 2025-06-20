@@ -22,6 +22,15 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
   const [resetEmail, setResetEmail] = useState("");
   const [showResetForm, setShowResetForm] = useState(false);
 
+  // Fonction pour nettoyer l'état d'authentification
+  const cleanupAuthState = () => {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !pseudo) {
@@ -31,6 +40,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
 
     setLoading(true);
     try {
+      // Nettoyer l'état d'authentification existant
+      cleanupAuthState();
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -38,15 +50,24 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
           data: {
             pseudo: pseudo
           },
-          emailRedirectTo: `${window.location.origin}/auth`
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
 
       if (error) throw error;
       
       if (data.user) {
-        toast.success("Compte créé ! Vérifiez votre email pour confirmer votre inscription.");
+        if (!data.user.email_confirmed_at) {
+          toast.success("Compte créé ! Vérifiez votre email pour confirmer votre inscription.");
+        } else {
+          toast.success("Compte créé et confirmé ! Bienvenue !");
+        }
         onOpenChange(false);
+        
+        // Réinitialiser les champs
+        setEmail("");
+        setPassword("");
+        setPseudo("");
       }
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la création du compte");
@@ -64,6 +85,9 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
 
     setLoading(true);
     try {
+      // Nettoyer l'état d'authentification existant
+      cleanupAuthState();
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -72,8 +96,11 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
       if (error) throw error;
       
       if (data.user) {
-        toast.success("Connexion réussie !");
         onOpenChange(false);
+        
+        // Réinitialiser les champs
+        setEmail("");
+        setPassword("");
       }
     } catch (error: any) {
       toast.error(error.message || "Erreur lors de la connexion");
@@ -108,10 +135,13 @@ const AuthDialog: React.FC<AuthDialogProps> = ({ open, onOpenChange }) => {
 
   const signInWithGoogle = async () => {
     try {
+      // Nettoyer l'état d'authentification existant
+      cleanupAuthState();
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`
+          redirectTo: `${window.location.origin}/`
         }
       });
       if (error) throw error;

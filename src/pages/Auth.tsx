@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock, User, Sparkles, Heart, Users, Zap } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 const Auth = () => {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuthSession();
   const { toast } = useToast();
   const [authLoading, setAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -31,6 +32,15 @@ const Auth = () => {
     return <Navigate to="/" replace />;
   }
 
+  // Fonction pour nettoyer l'état d'authentification
+  const cleanupAuthState = () => {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !pseudo) {
@@ -44,6 +54,9 @@ const Auth = () => {
 
     setAuthLoading(true);
     try {
+      // Nettoyer l'état d'authentification existant
+      cleanupAuthState();
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -58,10 +71,22 @@ const Auth = () => {
       if (error) throw error;
       
       if (data.user) {
-        toast({
-          title: "🎉 Compte créé !",
-          description: "Vérifiez votre email pour confirmer votre inscription.",
-        });
+        if (!data.user.email_confirmed_at) {
+          toast({
+            title: "🎉 Compte créé !",
+            description: "Vérifiez votre email pour confirmer votre inscription.",
+          });
+        } else {
+          toast({
+            title: "🎉 Compte créé et confirmé !",
+            description: "Bienvenue dans Who Most Likely?",
+          });
+        }
+        
+        // Réinitialiser les champs
+        setEmail("");
+        setPassword("");
+        setPseudo("");
       }
     } catch (error: any) {
       toast({
@@ -87,6 +112,9 @@ const Auth = () => {
 
     setAuthLoading(true);
     try {
+      // Nettoyer l'état d'authentification existant
+      cleanupAuthState();
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -95,10 +123,9 @@ const Auth = () => {
       if (error) throw error;
       
       if (data.user) {
-        toast({
-          title: "🚀 Connexion réussie !",
-          description: "Bienvenue dans Who Most Likely?",
-        });
+        // Réinitialiser les champs
+        setEmail("");
+        setPassword("");
       }
     } catch (error: any) {
       toast({
@@ -113,6 +140,9 @@ const Auth = () => {
 
   const signInWithGoogle = async () => {
     try {
+      // Nettoyer l'état d'authentification existant
+      cleanupAuthState();
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -336,7 +366,7 @@ const Auth = () => {
         @keyframes blob {
           0% { transform: translate(0px, 0px) scale(1); }
           33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9);
+          66% { transform: translate(-20px, 20px) scale(0.9); }
           100% { transform: translate(0px, 0px) scale(1); }
         }
         .animate-blob {

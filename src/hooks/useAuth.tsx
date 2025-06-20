@@ -43,7 +43,10 @@ export const useAuth = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await fetchProfile(session.user.id);
+        // Différer la récupération du profil pour éviter les blocages
+        setTimeout(() => {
+          fetchProfile(session.user.id);
+        }, 0);
       } else {
         setProfile(null);
         setLoading(false);
@@ -63,6 +66,10 @@ export const useAuth = () => {
 
       if (error) {
         console.error('Erreur lors de la récupération du profil:', error);
+        // Si le profil n'existe pas, on peut essayer de le créer
+        if (error.code === 'PGRST116') {
+          console.log('Profil non trouvé, il sera créé automatiquement');
+        }
       } else {
         setProfile(data);
       }
@@ -75,9 +82,21 @@ export const useAuth = () => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      // Nettoyer localStorage
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      await supabase.auth.signOut({ scope: 'global' });
+      
+      // Forcer le rechargement pour un état propre
+      window.location.href = '/auth';
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
+      // Forcer la déconnexion côté client même en cas d'erreur
+      window.location.href = '/auth';
     }
   };
 
