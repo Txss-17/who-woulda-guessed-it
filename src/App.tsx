@@ -18,6 +18,7 @@ import JoinQuickGame from "./pages/JoinQuickGame";
 import PlayerNameSetup from "./pages/PlayerNameSetup";
 import WaitingRoom from "./pages/WaitingRoom";
 import PlayGame from "./pages/PlayGame";
+import GameEnd from "./pages/GameEnd";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ function App() {
               <Route path="/player-name-setup/:gameCode" element={<PlayerNameSetup />} />
               <Route path="/waiting-room/:gameCode" element={<WaitingRoom />} />
               <Route path="/play/:gameCode" element={<PlayGame />} />
+              <Route path="/game-end/:gameCode" element={<GameEnd />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
