@@ -42,27 +42,9 @@ const JoinGame = () => {
       setGameData(result.party);
       setIsJoined(true);
       
-      // Simulate player joining
-      const temporaryName = `Joueur ${Date.now().toString().slice(-4)}`;
-      const newPlayer = {
-        id: Date.now().toString(),
-        name: temporaryName,
-        status: 'online' as const,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(temporaryName)}&background=10b981&color=fff`
-      };
-      
-      // Store player data securely
-      sessionStorage.setItem('playerData', JSON.stringify(newPlayer));
-      sessionStorage.setItem('gameData', JSON.stringify({
-        gameCode,
-        players: [newPlayer],
-        questions: [],
-        aiGenerated: false
-      }));
-      
-      // Redirect to player name setup
+      // Redirect to waiting room for the party
       setTimeout(() => {
-        navigate(`/player-name-setup/${gameCode}`);
+        navigate(`/waiting-room/${gameCode}`);
       }, 1500);
     } else {
       // Error handling is done in the hook

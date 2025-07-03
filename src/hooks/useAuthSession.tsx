@@ -67,10 +67,10 @@ export const useAuthSession = () => {
           if (session?.user) {
             toast.success(`Bienvenue ${session.user.email} ! 🎉`);
             
-            // Redirection automatique vers la page d'accueil après connexion
+            // Redirection automatique vers le dashboard après connexion
             setTimeout(() => {
               if (window.location.pathname === '/auth') {
-                window.location.href = '/';
+                window.location.href = '/dashboard';
               }
             }, 1500);
           }

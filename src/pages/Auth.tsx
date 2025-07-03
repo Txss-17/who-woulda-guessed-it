@@ -29,7 +29,7 @@ const Auth = () => {
   }
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   // Fonction pour nettoyer l'état d'authentification
