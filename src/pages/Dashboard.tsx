@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthSession } from '@/hooks/useAuthSession';
 import { useBadges } from '@/hooks/useBadges';
 import { useStatistics } from '@/hooks/useStatistics';
 import BadgesDisplay from '@/components/gamification/BadgesDisplay';
@@ -14,15 +14,15 @@ import { Gamepad2, Trophy, Users, TrendingUp, Star, Crown } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, loading } = useAuthSession();
   const { userBadges, checkAndAwardBadges } = useBadges(user?.id);
   const { userStats } = useStatistics(user?.id);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/');
+    if (!loading && !user) {
+      navigate('/auth');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -30,7 +30,15 @@ const Dashboard = () => {
     }
   }, [user, checkAndAwardBadges]);
 
-  if (!user || !profile) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
     return null;
   }
 
@@ -44,7 +52,7 @@ const Dashboard = () => {
         <div>
           <h1 className="text-3xl font-bold">Tableau de bord</h1>
           <p className="text-muted-foreground">
-            Bienvenue, {profile.pseudo} ! Niveau {profile.niveau}
+            Bienvenue, {user.email} !
           </p>
         </div>
         <PartyCreationDialog 
@@ -61,7 +69,7 @@ const Dashboard = () => {
             <Gamepad2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{profile.parties_jouees || 0}</div>
+            <div className="text-2xl font-bold">0</div>
             <p className="text-xs text-muted-foreground">
               +{getStatValue('games_played')} cette semaine
             </p>
@@ -74,7 +82,7 @@ const Dashboard = () => {
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{profile.votes_recus || 0}</div>
+            <div className="text-2xl font-bold">0</div>
             <p className="text-xs text-muted-foreground">
               +{getStatValue('votes_received')} cette semaine
             </p>
@@ -100,9 +108,9 @@ const Dashboard = () => {
             <Crown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{profile.experience || 0} XP</div>
+            <div className="text-2xl font-bold">0 XP</div>
             <p className="text-xs text-muted-foreground">
-              Niveau {profile.niveau}
+              Niveau 1
             </p>
           </CardContent>
         </Card>
@@ -136,7 +144,7 @@ const Dashboard = () => {
               <div className="text-center py-8 text-muted-foreground">
                 <Gamepad2 className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>Aucune partie récente</p>
-                <Button className="mt-4" onClick={() => navigate('/online')}>
+                <Button className="mt-4" onClick={() => navigate('/online-game')}>
                   Rejoindre une partie
                 </Button>
               </div>
