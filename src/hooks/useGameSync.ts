@@ -7,10 +7,9 @@ interface GameData {
   players: Player[];
   questions: string[];
   aiGenerated: boolean;
-  hostId: string; // ID de l'hôte pour identification
 }
 
-// Simuler une synchronisation globale avec localStorage partagé - SEULEMENT pour les données de jeu
+// Simuler une synchronisation globale avec localStorage partagé
 const SYNC_KEY = 'game_sync_';
 
 export const useGameSync = (gameCode: string | null) => {
@@ -19,7 +18,7 @@ export const useGameSync = (gameCode: string | null) => {
 
   const syncKey = gameCode ? `${SYNC_KEY}${gameCode}` : null;
 
-  // Fonction pour sauvegarder les données synchronisées (SEULEMENT les données de jeu)
+  // Fonction pour sauvegarder les données synchronisées
   const saveGameData = (data: GameData) => {
     if (syncKey) {
       localStorage.setItem(syncKey, JSON.stringify(data));
@@ -50,10 +49,13 @@ export const useGameSync = (gameCode: string | null) => {
         players: [...currentData.players, player]
       };
       saveGameData(updatedData);
+      
+      // Mettre à jour aussi sessionStorage pour compatibilité
+      sessionStorage.setItem('gameData', JSON.stringify(updatedData));
     }
   };
 
-  // Fonction pour initialiser la partie (hôte seulement)
+  // Fonction pour initialiser la partie (hôte)
   const initializeGame = (hostPlayer: Player, questions: string[]) => {
     if (!syncKey) return;
 
@@ -61,33 +63,18 @@ export const useGameSync = (gameCode: string | null) => {
       gameCode: gameCode!,
       players: [hostPlayer],
       questions,
-      aiGenerated: false,
-      hostId: hostPlayer.id // Marquer qui est l'hôte
+      aiGenerated: false
     };
 
     saveGameData(newGameData);
     setIsHost(true);
     
-    // Sauvegarder SEULEMENT les données du joueur actuel dans sessionStorage
-    // PAS les données de tous les joueurs
-    sessionStorage.setItem('currentPlayerData', JSON.stringify(hostPlayer));
+    // Mettre à jour sessionStorage
+    sessionStorage.setItem('gameData', JSON.stringify(newGameData));
+    sessionStorage.setItem('playerData', JSON.stringify(hostPlayer));
   };
 
-  // Fonction pour rejoindre une partie (invité)
-  const joinGame = (guestPlayer: Player) => {
-    if (!gameData || !syncKey) return;
-
-    // Sauvegarder SEULEMENT les données du joueur invité
-    sessionStorage.setItem('currentPlayerData', JSON.stringify(guestPlayer));
-    
-    // Ajouter le joueur à la partie partagée
-    addPlayerToGame(guestPlayer);
-    
-    // L'invité n'est PAS l'hôte
-    setIsHost(false);
-  };
-
-  // Écouter les changements dans localStorage (SEULEMENT pour les données de jeu)
+  // Écouter les changements dans localStorage
   useEffect(() => {
     if (!syncKey) return;
 
@@ -96,24 +83,26 @@ export const useGameSync = (gameCode: string | null) => {
         try {
           const newData = JSON.parse(e.newValue);
           setGameData(newData);
+          // Synchroniser avec sessionStorage
+          sessionStorage.setItem('gameData', JSON.stringify(newData));
         } catch (error) {
           console.error('Erreur lors de la synchronisation:', error);
         }
       }
     };
 
-    // Charger les données initiales de la partie
+    // Charger les données initiales
     const existingData = localStorage.getItem(syncKey);
     if (existingData) {
       try {
         const data = JSON.parse(existingData);
         setGameData(data);
         
-        // Vérifier si l'utilisateur actuel est l'hôte en comparant avec ses propres données
-        const currentPlayerData = sessionStorage.getItem('currentPlayerData');
-        if (currentPlayerData) {
-          const currentPlayer = JSON.parse(currentPlayerData);
-          setIsHost(data.hostId === currentPlayer.id);
+        // Vérifier si l'utilisateur actuel est l'hôte
+        const playerData = sessionStorage.getItem('playerData');
+        if (playerData) {
+          const currentPlayer = JSON.parse(playerData);
+          setIsHost(data.players[0]?.id === currentPlayer.id);
         }
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
@@ -123,7 +112,7 @@ export const useGameSync = (gameCode: string | null) => {
     // Écouter les changements
     window.addEventListener('storage', handleStorageChange);
 
-    // Polling pour détecter les changements
+    // Polling pour détecter les changements (pour les onglets de même origine)
     const interval = setInterval(() => {
       const currentData = localStorage.getItem(syncKey);
       if (currentData) {
@@ -131,6 +120,7 @@ export const useGameSync = (gameCode: string | null) => {
           const data = JSON.parse(currentData);
           setGameData(prevData => {
             if (JSON.stringify(prevData) !== JSON.stringify(data)) {
+              sessionStorage.setItem('gameData', JSON.stringify(data));
               return data;
             }
             return prevData;
@@ -152,7 +142,6 @@ export const useGameSync = (gameCode: string | null) => {
     isHost,
     addPlayerToGame,
     initializeGame,
-    joinGame,
     saveGameData
   };
 };

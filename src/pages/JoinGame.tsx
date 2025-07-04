@@ -16,7 +16,7 @@ const JoinGame = () => {
   const [isJoined, setIsJoined] = useState(false);
   const [gameData, setGameData] = useState<any>(null);
   
-  const { gameData: syncedGameData, joinGame } = useGameSync(gameCode || null);
+  const { gameData: syncedGameData, addPlayerToGame } = useGameSync(gameCode || null);
   
   useEffect(() => {
     if (!gameCode) {
@@ -56,17 +56,19 @@ const JoinGame = () => {
     try {
       if (!syncedGameData) return;
 
-      // Créer un joueur temporaire INVITÉ (pas connecté à un compte)
+      // Créer un joueur temporaire
       const temporaryPlayer = {
-        id: `guest_${Date.now().toString()}`, // ID unique pour l'invité
-        name: `Invité_${Date.now().toString().slice(-4)}`,
+        id: Date.now().toString(),
+        name: `Joueur_${Date.now().toString().slice(-4)}`,
         status: 'online' as const,
-        avatar: `https://ui-avatars.com/api/?name=Invité&background=10b981&color=fff`,
-        isGuest: true // Marquer comme invité
+        avatar: `https://ui-avatars.com/api/?name=Joueur&background=10b981&color=fff`
       };
 
-      // Utiliser la nouvelle fonction joinGame qui sépare les données
-      joinGame(temporaryPlayer);
+      // Stocker les données dans sessionStorage
+      sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
+      
+      // Ajouter le joueur à la partie synchronisée
+      addPlayerToGame(temporaryPlayer);
 
       setIsJoined(true);
 
@@ -144,10 +146,10 @@ const JoinGame = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-center gap-2 text-green-600">
                   <UserCheck className="h-5 w-5" />
-                  <span className="font-medium">Partie rejointe en tant qu'invité !</span>
+                  <span className="font-medium">Partie rejointe !</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Tu rejoins en tant qu'invité temporaire...
+                  Redirection vers la configuration du nom...
                 </p>
               </div>
             ) : (
