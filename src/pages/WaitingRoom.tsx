@@ -22,9 +22,9 @@ const WaitingRoom = () => {
   const players = gameData?.players || [];
   
   useEffect(() => {
-    // Récupérer les données du joueur actuel
-    const playerDataStr = sessionStorage.getItem('playerData');
-    if (!playerDataStr) {
+    // Récupérer SEULEMENT les données du joueur actuel
+    const currentPlayerDataStr = sessionStorage.getItem('currentPlayerData');
+    if (!currentPlayerDataStr) {
       toast({
         title: "Erreur",
         description: "Données du joueur non trouvées",
@@ -34,9 +34,9 @@ const WaitingRoom = () => {
       return;
     }
     
-    const playerData = JSON.parse(playerDataStr);
+    const currentPlayerData = JSON.parse(currentPlayerDataStr);
     const currentPlayerWithStatus: Player = {
-      ...playerData,
+      ...currentPlayerData,
       status: 'online' as UserStatus,
     };
     setCurrentPlayer(currentPlayerWithStatus);
@@ -52,7 +52,7 @@ const WaitingRoom = () => {
       return;
     }
     
-    // Vérifier si le joueur fait partie de cette partie
+    // Vérifier si la partie correspond
     if (gameData.gameCode !== gameCode) {
       toast({
         title: "Code invalide",
@@ -63,6 +63,7 @@ const WaitingRoom = () => {
       return;
     }
     
+    // Vérifier si le joueur fait partie de cette partie
     const playerExists = gameData.players.some((p: Player) => p.id === currentPlayerWithStatus.id);
     if (!playerExists) {
       toast({
@@ -85,6 +86,14 @@ const WaitingRoom = () => {
     }
     
     navigate(`/play/${gameCode}`);
+  };
+
+  const handleLeaveGame = () => {
+    if (confirm("Quitter la salle d'attente ?")) {
+      // Nettoyer seulement les données du joueur actuel
+      sessionStorage.removeItem('currentPlayerData');
+      navigate('/');
+    }
   };
 
   if (!gameData || !currentPlayer) {
@@ -138,7 +147,7 @@ const WaitingRoom = () => {
                   <span className="mt-2 text-sm truncate w-full text-center">
                     {player.name}
                     {player.id === currentPlayer?.id ? ' (toi)' : ''}
-                    {players[0]?.id === player.id ? ' (hôte)' : ''}
+                    {gameData.hostId === player.id ? ' (hôte)' : ''}
                   </span>
                 </div>
               ))}
@@ -159,11 +168,7 @@ const WaitingRoom = () => {
             
             <Button
               variant="outline"
-              onClick={() => {
-                if (confirm("Quitter la salle d'attente ?")) {
-                  navigate('/');
-                }
-              }}
+              onClick={handleLeaveGame}
             >
               Quitter
             </Button>
