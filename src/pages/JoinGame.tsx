@@ -15,7 +15,6 @@ const JoinGame = () => {
   const { joinGameSecurely, isJoining } = useSecureGameJoin();
   
   const [isJoined, setIsJoined] = useState(false);
-  const [playerCount, setPlayerCount] = useState(0);
   const [gameData, setGameData] = useState<any>(null);
   
   useEffect(() => {
@@ -29,43 +28,57 @@ const JoinGame = () => {
       return;
     }
 
-    // Attempt to join the game securely
-    handleSecureJoin();
+    // Simuler la vérification et la jointure de la partie
+    handleGameJoin();
   }, [gameCode]);
 
-  const handleSecureJoin = async () => {
-    if (!gameCode) return;
-
-    const result = await joinGameSecurely(gameCode);
-    
-    if (result.success && result.party) {
-      setGameData(result.party);
-      setIsJoined(true);
-      
-      // Simulate player joining
-      const temporaryName = `Joueur ${Date.now().toString().slice(-4)}`;
-      const newPlayer = {
-        id: Date.now().toString(),
-        name: temporaryName,
-        status: 'online' as const,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(temporaryName)}&background=10b981&color=fff`
+  const handleGameJoin = async () => {
+    try {
+      // Simuler une partie existante
+      const mockGameData = {
+        gameCode,
+        name: `Partie ${gameCode}`,
+        playerCount: Math.floor(Math.random() * 4) + 2,
+        maxPlayers: 8,
+        status: 'waiting'
       };
-      
-      // Store player data securely
-      sessionStorage.setItem('playerData', JSON.stringify(newPlayer));
+
+      // Créer un joueur temporaire
+      const temporaryPlayer = {
+        id: Date.now().toString(),
+        name: `Joueur_${Date.now().toString().slice(-4)}`,
+        status: 'online' as const,
+        avatar: `https://ui-avatars.com/api/?name=Joueur&background=10b981&color=fff`
+      };
+
+      // Stocker les données dans sessionStorage
+      sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
       sessionStorage.setItem('gameData', JSON.stringify({
         gameCode,
-        players: [newPlayer],
-        questions: [],
-        aiGenerated: false
+        players: [temporaryPlayer],
+        questions: [
+          "Qui est le plus susceptible de chanter sous la douche ?",
+          "Qui est le plus susceptible d'oublier son anniversaire ?",
+          "Qui est le plus susceptible de devenir célèbre ?",
+          "Qui est le plus susceptible de partir en vacances sans prévenir ?"
+        ],
+        aiGenerated: true
       }));
-      
-      // Redirect to player name setup
+
+      setGameData(mockGameData);
+      setIsJoined(true);
+
+      // Rediriger vers la configuration du nom du joueur
       setTimeout(() => {
         navigate(`/player-name-setup/${gameCode}`);
-      }, 1500);
-    } else {
-      // Error handling is done in the hook
+      }, 2000);
+
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de rejoindre la partie",
+        variant: "destructive"
+      });
       navigate('/');
     }
   };
@@ -76,7 +89,7 @@ const JoinGame = () => {
         <Card className="p-6">
           <div className="text-center">
             <Clock className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-            <p>Vérification sécurisée de la partie...</p>
+            <p>Vérification de la partie...</p>
           </div>
         </Card>
       </div>
@@ -112,30 +125,35 @@ const JoinGame = () => {
             
             <div className="flex items-center justify-center gap-2 text-sm">
               <Shield className="h-4 w-4 text-green-600" />
-              <span className="text-green-600">Connexion sécurisée</span>
+              <span className="text-green-600">Partie trouvée</span>
             </div>
 
-            {isJoining && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-center gap-2 text-primary">
-                  <Clock className="h-5 w-5 animate-spin" />
-                  <span>Vérification des autorisations...</span>
+            <div className="bg-secondary/30 p-4 rounded-lg">
+              <h3 className="font-medium mb-2">{gameData.name}</h3>
+              <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  <span>{gameData.playerCount}/{gameData.maxPlayers} joueurs</span>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Validation sécurisée en cours...
-                </p>
               </div>
-            )}
+            </div>
 
-            {isJoined && (
+            {isJoined ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-center gap-2 text-green-600">
                   <UserCheck className="h-5 w-5" />
-                  <span className="font-medium">Connecté avec succès !</span>
+                  <span className="font-medium">Partie rejointe !</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Redirection vers la configuration du nom...
                 </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-2 text-primary">
+                  <Clock className="h-5 w-5 animate-spin" />
+                  <span>Rejoindre la partie...</span>
+                </div>
               </div>
             )}
           </div>

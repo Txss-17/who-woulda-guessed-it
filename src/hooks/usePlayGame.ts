@@ -11,6 +11,12 @@ interface GameData {
   aiGenerated?: boolean;
 }
 
+interface QuestionResult {
+  questionText: string;
+  votes: { playerId: string; playerName: string; count: number }[];
+  winner: { playerId: string; playerName: string };
+}
+
 export const usePlayGame = () => {
   const { gameCode } = useParams();
   const navigate = useNavigate();
@@ -20,6 +26,7 @@ export const usePlayGame = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
+  const [gameResults, setGameResults] = useState<QuestionResult[]>([]);
   
   useEffect(() => {
     const playerDataStr = sessionStorage.getItem('playerData');
@@ -55,16 +62,24 @@ export const usePlayGame = () => {
     }
   }, [navigate, toast]);
 
-  const nextQuestion = (gameResults: any[]) => {
+  const nextQuestion = (questionResult?: QuestionResult) => {
     if (!gameData) return;
+    
+    // Ajouter le résultat de la question actuelle s'il est fourni
+    if (questionResult) {
+      setGameResults(prev => [...prev, questionResult]);
+    }
     
     if (currentQuestionIndex < gameData.questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     } else {
+      // Fin de partie
       setGameOver(true);
       
-      // Sauvegarder l'historique de la partie
+      // Sauvegarder l'historique de la partie avec tous les résultats
       const gameHistory = JSON.parse(sessionStorage.getItem('gameHistory') || '[]');
+      const finalResults = questionResult ? [...gameResults, questionResult] : gameResults;
+      
       const newGameHistory = [
         ...gameHistory,
         {
@@ -72,10 +87,12 @@ export const usePlayGame = () => {
           date: new Date().toISOString(),
           gameType: "friendly",
           playerCount: gameData.players.length,
-          questions: gameResults
+          questions: finalResults,
+          totalQuestions: gameData.questions.length
         }
       ];
       sessionStorage.setItem('gameHistory', JSON.stringify(newGameHistory));
+      sessionStorage.setItem('finalGameResults', JSON.stringify(finalResults));
     }
   };
 
@@ -85,6 +102,7 @@ export const usePlayGame = () => {
     gameOver,
     currentPlayer,
     gameCode,
+    gameResults,
     nextQuestion
   };
 };

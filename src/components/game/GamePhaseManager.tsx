@@ -9,7 +9,7 @@ interface GamePhaseManagerProps {
   players: Player[];
   currentQuestion: string;
   currentPlayer: Player;
-  onNextQuestion: () => void;
+  onNextQuestion: (questionResult?: any) => void;
 }
 
 const GamePhaseManager = ({ 
@@ -22,13 +22,13 @@ const GamePhaseManager = ({
     selectedPlayer,
     gamePhase,
     votes,
-    gameResults,
     handleVote,
     confirmVote,
     getWinningPlayer,
     startChallengePhase,
     completeChallengePhase,
-    resetVotingState
+    resetVotingState,
+    getCurrentQuestionResult
   } = useGameVotes({ players });
 
   const handleConfirmVote = () => {
@@ -40,9 +40,9 @@ const GamePhaseManager = ({
   };
 
   const handleChallengeComplete = () => {
+    const questionResult = getCurrentQuestionResult();
     completeChallengePhase();
-    resetVotingState();
-    onNextQuestion();
+    onNextQuestion(questionResult);
   };
 
   const winningPlayer = getWinningPlayer();

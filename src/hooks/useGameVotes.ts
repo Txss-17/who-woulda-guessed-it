@@ -6,12 +6,18 @@ interface UseGameVotesProps {
   players: Player[];
 }
 
+interface QuestionResult {
+  questionText: string;
+  votes: { playerId: string; playerName: string; count: number }[];
+  winner: { playerId: string; playerName: string };
+}
+
 export const useGameVotes = ({ players }: UseGameVotesProps) => {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [gamePhase, setGamePhase] = useState<'voting' | 'results' | 'challenge'>('voting');
   const [votes, setVotes] = useState<Record<string, number>>({});
   const [showConfetti, setShowConfetti] = useState(false);
-  const [gameResults, setGameResults] = useState<any[]>([]);
+  const [currentQuestionResult, setCurrentQuestionResult] = useState<QuestionResult | null>(null);
 
   const handleVote = (player: Player) => {
     if (gamePhase !== 'voting') return;
@@ -23,7 +29,7 @@ export const useGameVotes = ({ players }: UseGameVotesProps) => {
     
     setGamePhase('results');
     
-    // Simuler les votes des autres joueurs (remplacer par la vraie logique)
+    // Simuler les votes des autres joueurs
     const newVotes: Record<string, number> = {};
     
     players.forEach(player => {
@@ -35,8 +41,8 @@ export const useGameVotes = ({ players }: UseGameVotesProps) => {
     
     setVotes(newVotes);
     
-    // Sauvegarder le résultat de cette question
-    const questionResult = {
+    // Créer le résultat de cette question
+    const questionResult: QuestionResult = {
       questionText: currentQuestion,
       votes: Object.entries(newVotes).map(([playerId, count]) => {
         const player = players.find(p => p.id === playerId);
@@ -52,7 +58,7 @@ export const useGameVotes = ({ players }: UseGameVotesProps) => {
       }
     };
     
-    setGameResults(prev => [...prev, questionResult]);
+    setCurrentQuestionResult(questionResult);
     
     setTimeout(() => {
       setShowConfetti(true);
@@ -75,7 +81,7 @@ export const useGameVotes = ({ players }: UseGameVotesProps) => {
   };
 
   const completeChallengePhase = () => {
-    // Revenir à la phase de vote pour la question suivante
+    // La phase de challenge est terminée, on peut passer à la question suivante
     resetVotingState();
   };
 
@@ -84,6 +90,11 @@ export const useGameVotes = ({ players }: UseGameVotesProps) => {
     setSelectedPlayer(null);
     setVotes({});
     setShowConfetti(false);
+    setCurrentQuestionResult(null);
+  };
+
+  const getCurrentQuestionResult = (): QuestionResult | null => {
+    return currentQuestionResult;
   };
 
   return {
@@ -91,13 +102,12 @@ export const useGameVotes = ({ players }: UseGameVotesProps) => {
     gamePhase,
     votes,
     showConfetti,
-    gameResults,
     handleVote,
     confirmVote,
     getWinningPlayer,
     startChallengePhase,
     completeChallengePhase,
     resetVotingState,
-    setGameResults
+    getCurrentQuestionResult
   };
 };
