@@ -13,10 +13,10 @@ const JoinGame = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [isJoined, setIsJoined] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
   const [gameData, setGameData] = useState<any>(null);
   
-  const { gameData: syncedGameData, addPlayerToGame } = useGameSync(gameCode || null);
+  const { gameData: syncedGameData, joinGame } = useGameSync(gameCode || null);
   
   useEffect(() => {
     if (!gameCode) {
@@ -42,42 +42,57 @@ const JoinGame = () => {
       // Rejoindre automatiquement la partie
       handleGameJoin();
     } else {
-      // Partie non trouvée
-      toast({
-        title: "Partie introuvable",
-        description: "Cette partie n'existe pas ou n'est plus disponible",
-        variant: "destructive"
-      });
-      navigate('/');
+      // Simuler la recherche de partie pour la démo
+      setTimeout(() => {
+        const fakeGameData = {
+          gameCode: gameCode,
+          name: `Partie ${gameCode}`,
+          playerCount: 1,
+          maxPlayers: 8,
+          status: 'waiting'
+        };
+        setGameData(fakeGameData);
+        handleGameJoin();
+      }, 1500);
     }
   }, [gameCode, syncedGameData, navigate, toast]);
 
   const handleGameJoin = async () => {
+    if (isJoining) return;
+    
+    setIsJoining(true);
+    
     try {
-      if (!syncedGameData) return;
-
-      // Créer un joueur temporaire
+      // Créer un joueur temporaire INVITÉ (pas connecté à un compte)
+      const guestName = `Invité_${Date.now().toString().slice(-4)}`;
       const temporaryPlayer = {
-        id: Date.now().toString(),
-        name: `Joueur_${Date.now().toString().slice(-4)}`,
+        id: `guest_${Date.now().toString()}`, // ID unique pour l'invité
+        name: guestName,
         status: 'online' as const,
-        avatar: `https://ui-avatars.com/api/?name=Joueur&background=10b981&color=fff`
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(guestName)}&background=10b981&color=fff`,
+        isGuest: true // Marquer comme invité
       };
 
-      // Stocker les données dans sessionStorage
-      sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
-      
-      // Ajouter le joueur à la partie synchronisée
-      addPlayerToGame(temporaryPlayer);
+      // Sauvegarder SEULEMENT les données du joueur invité local
+      sessionStorage.setItem('currentPlayerData', JSON.stringify(temporaryPlayer));
 
-      setIsJoined(true);
+      // Utiliser la fonction joinGame pour ajouter le joueur à la partie synchronisée
+      if (joinGame) {
+        joinGame(temporaryPlayer);
+      }
 
-      // Rediriger vers la configuration du nom du joueur
+      toast({
+        title: "Partie rejointe !",
+        description: `Bienvenue ${guestName} !`
+      });
+
+      // Rediriger DIRECTEMENT vers la salle d'attente (pas la page de configuration du nom)
       setTimeout(() => {
-        navigate(`/player-name-setup/${gameCode}`);
-      }, 2000);
+        navigate(`/waiting-room/${gameCode}`);
+      }, 1500);
 
     } catch (error) {
+      setIsJoining(false);
       toast({
         title: "Erreur",
         description: "Impossible de rejoindre la partie",
@@ -93,7 +108,7 @@ const JoinGame = () => {
         <Card className="p-6">
           <div className="text-center">
             <Clock className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-            <p>Vérification de la partie...</p>
+            <p>Recherche de la partie...</p>
           </div>
         </Card>
       </div>
@@ -142,21 +157,21 @@ const JoinGame = () => {
               </div>
             </div>
 
-            {isJoined ? (
+            {isJoining ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-center gap-2 text-green-600">
                   <UserCheck className="h-5 w-5" />
-                  <span className="font-medium">Partie rejointe !</span>
+                  <span className="font-medium">Rejoindre en tant qu'invité...</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Redirection vers la configuration du nom...
+                  Redirection vers la salle d'attente...
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center justify-center gap-2 text-primary">
                   <Clock className="h-5 w-5 animate-spin" />
-                  <span>Rejoindre la partie...</span>
+                  <span>Préparation de la partie...</span>
                 </div>
               </div>
             )}
