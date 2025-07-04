@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { ChevronLeft, User, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Blob, BackgroundDecoration } from '@/components/DecorativeElements';
+import { useGameSync } from '@/hooks/useGameSync';
 
 const PlayerNameSetup = () => {
   const { gameCode } = useParams();
@@ -17,12 +18,13 @@ const PlayerNameSetup = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [currentPlayerName, setCurrentPlayerName] = useState('');
 
+  const { gameData, addPlayerToGame } = useGameSync(gameCode || null);
+
   useEffect(() => {
     // Vérifier que le joueur a bien rejoint une partie
     const playerDataStr = sessionStorage.getItem('playerData');
-    const gameDataStr = sessionStorage.getItem('gameData');
     
-    if (!playerDataStr || !gameDataStr || !gameCode) {
+    if (!playerDataStr || !gameData || !gameCode) {
       toast({
         title: "Erreur",
         description: "Données de partie non trouvées",
@@ -34,7 +36,6 @@ const PlayerNameSetup = () => {
 
     try {
       const playerData = JSON.parse(playerDataStr);
-      const gameData = JSON.parse(gameDataStr);
       
       // Vérifier que la partie correspond
       if (gameData.gameCode !== gameCode) {
@@ -69,7 +70,7 @@ const PlayerNameSetup = () => {
       });
       navigate('/');
     }
-  }, [gameCode, navigate, toast]);
+  }, [gameCode, gameData, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,16 +96,14 @@ const PlayerNameSetup = () => {
     setIsUpdating(true);
     
     try {
-      // Récupérer les données du joueur et de la partie
+      // Récupérer les données du joueur
       const playerDataStr = sessionStorage.getItem('playerData');
-      const gameDataStr = sessionStorage.getItem('gameData');
       
-      if (!playerDataStr || !gameDataStr) {
+      if (!playerDataStr || !gameData) {
         throw new Error('Données manquantes');
       }
 
       const playerData = JSON.parse(playerDataStr);
-      const gameData = JSON.parse(gameDataStr);
       
       // Vérifier que le nom n'est pas déjà pris
       const nameExists = gameData.players?.some(
@@ -130,19 +129,11 @@ const PlayerNameSetup = () => {
             name: playerName.trim()
           };
           
-          // Mettre à jour la liste des joueurs dans la partie
-          const updatedPlayers = gameData.players?.map((p: any) => 
-            p.id === playerData.id ? { ...p, name: playerName.trim() } : p
-          ) || [];
-          
-          const updatedGameData = {
-            ...gameData,
-            players: updatedPlayers
-          };
-          
-          // Sauvegarder les données mises à jour
+          // Sauvegarder les données mises à jour du joueur
           sessionStorage.setItem('playerData', JSON.stringify(updatedPlayerData));
-          sessionStorage.setItem('gameData', JSON.stringify(updatedGameData));
+          
+          // Ajouter/mettre à jour le joueur dans la partie synchronisée
+          addPlayerToGame(updatedPlayerData);
           
           setIsUpdating(false);
           
