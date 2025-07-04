@@ -5,18 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChevronLeft, Users, UserCheck, Clock, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSecureGameJoin } from '@/hooks/useSecureGameJoin';
 import { Blob, BackgroundDecoration } from '@/components/DecorativeElements';
-import { useGameSync } from '@/hooks/useGameSync';
 
 const JoinGame = () => {
   const { gameCode } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { joinGameSecurely, isJoining } = useSecureGameJoin();
   
-  const [isJoining, setIsJoining] = useState(false);
+  const [isJoined, setIsJoined] = useState(false);
   const [gameData, setGameData] = useState<any>(null);
-  
-  const { gameData: syncedGameData, joinGame } = useGameSync(gameCode || null);
   
   useEffect(() => {
     if (!gameCode) {
@@ -29,70 +28,52 @@ const JoinGame = () => {
       return;
     }
 
-    // Vérifier si une partie existe avec ce code
-    if (syncedGameData) {
-      setGameData({
-        gameCode: syncedGameData.gameCode,
-        name: `Partie ${syncedGameData.gameCode}`,
-        playerCount: syncedGameData.players.length,
-        maxPlayers: 8,
-        status: 'waiting'
-      });
-      
-      // Rejoindre automatiquement la partie
-      handleGameJoin();
-    } else {
-      // Simuler la recherche de partie pour la démo
-      setTimeout(() => {
-        const fakeGameData = {
-          gameCode: gameCode,
-          name: `Partie ${gameCode}`,
-          playerCount: 1,
-          maxPlayers: 8,
-          status: 'waiting'
-        };
-        setGameData(fakeGameData);
-        handleGameJoin();
-      }, 1500);
-    }
-  }, [gameCode, syncedGameData, navigate, toast]);
+    // Simuler la vérification et la jointure de la partie
+    handleGameJoin();
+  }, [gameCode]);
 
   const handleGameJoin = async () => {
-    if (isJoining) return;
-    
-    setIsJoining(true);
-    
     try {
-      // Créer un joueur temporaire INVITÉ (pas connecté à un compte)
-      const guestName = `Invité_${Date.now().toString().slice(-4)}`;
-      const temporaryPlayer = {
-        id: `guest_${Date.now().toString()}`, // ID unique pour l'invité
-        name: guestName,
-        status: 'online' as const,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(guestName)}&background=10b981&color=fff`,
-        isGuest: true // Marquer comme invité
+      // Simuler une partie existante
+      const mockGameData = {
+        gameCode,
+        name: `Partie ${gameCode}`,
+        playerCount: Math.floor(Math.random() * 4) + 2,
+        maxPlayers: 8,
+        status: 'waiting'
       };
 
-      // Sauvegarder SEULEMENT les données du joueur invité local
-      sessionStorage.setItem('currentPlayerData', JSON.stringify(temporaryPlayer));
+      // Créer un joueur temporaire
+      const temporaryPlayer = {
+        id: Date.now().toString(),
+        name: `Joueur_${Date.now().toString().slice(-4)}`,
+        status: 'online' as const,
+        avatar: `https://ui-avatars.com/api/?name=Joueur&background=10b981&color=fff`
+      };
 
-      // Utiliser la fonction joinGame pour ajouter le joueur à la partie synchronisée
-      if (joinGame) {
-        joinGame(temporaryPlayer);
-      }
+      // Stocker les données dans sessionStorage
+      sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
+      sessionStorage.setItem('gameData', JSON.stringify({
+        gameCode,
+        players: [temporaryPlayer],
+        questions: [
+          "Qui est le plus susceptible de chanter sous la douche ?",
+          "Qui est le plus susceptible d'oublier son anniversaire ?",
+          "Qui est le plus susceptible de devenir célèbre ?",
+          "Qui est le plus susceptible de partir en vacances sans prévenir ?"
+        ],
+        aiGenerated: true
+      }));
 
-      toast({
-        title: "Partie rejointe !",
-        description: `Bienvenue ${guestName} !`
-      });
+      setGameData(mockGameData);
+      setIsJoined(true);
 
-      // Rediriger DIRECTEMENT vers la salle d'attente (pas la page de configuration du nom)
+      // Rediriger vers la configuration du nom du joueur
       setTimeout(() => {
-        navigate(`/waiting-room/${gameCode}`);
-      }, 1500);
+        navigate(`/player-name-setup/${gameCode}`);
+      }, 2000);
 
     } catch (error) {
-      setIsJoining(false);
       toast({
         title: "Erreur",
         description: "Impossible de rejoindre la partie",
@@ -108,7 +89,7 @@ const JoinGame = () => {
         <Card className="p-6">
           <div className="text-center">
             <Clock className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-            <p>Recherche de la partie...</p>
+            <p>Vérification de la partie...</p>
           </div>
         </Card>
       </div>
@@ -157,21 +138,21 @@ const JoinGame = () => {
               </div>
             </div>
 
-            {isJoining ? (
+            {isJoined ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-center gap-2 text-green-600">
                   <UserCheck className="h-5 w-5" />
-                  <span className="font-medium">Rejoindre en tant qu'invité...</span>
+                  <span className="font-medium">Partie rejointe !</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Redirection vers la salle d'attente...
+                  Redirection vers la configuration du nom...
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center justify-center gap-2 text-primary">
                   <Clock className="h-5 w-5 animate-spin" />
-                  <span>Préparation de la partie...</span>
+                  <span>Rejoindre la partie...</span>
                 </div>
               </div>
             )}

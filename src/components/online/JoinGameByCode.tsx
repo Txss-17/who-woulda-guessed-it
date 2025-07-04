@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -29,15 +28,61 @@ const JoinGameByCode = () => {
     
     const trimmedCode = gameCode.trim().toUpperCase();
     
-    // Simuler la vérification du code et redirection directe
+    // Simuler la vérification du code
     setTimeout(() => {
+      // Vérifier d'abord si c'est une partie rapide dans le sessionStorage
+      const storedGameData = sessionStorage.getItem('gameData');
+      if (storedGameData) {
+        try {
+          const data = JSON.parse(storedGameData);
+          if (data.gameCode === trimmedCode) {
+            setIsJoining(false);
+            toast({
+              title: "Partie rapide trouvée !",
+              description: "Redirection vers la partie..."
+            });
+            setTimeout(() => {
+              navigate(`/join-quick/${trimmedCode}`);
+            }, 500);
+            return;
+          }
+        } catch (error) {
+          console.log('Erreur lors de la vérification du sessionStorage:', error);
+        }
+      }
+      
+      // Créer une fausse partie en ligne pour la démo
+      const fakeOnlineGame = {
+        gameCode: trimmedCode,
+        players: [
+          {
+            id: 'host-1',
+            name: 'Hôte de la partie',
+            status: 'online',
+            avatar: `https://ui-avatars.com/api/?name=Hôte&background=10b981&color=fff`
+          }
+        ],
+        type: 'friendly',
+        status: 'waiting',
+        aiGenerated: true,
+        questions: [
+          "Qui est le plus susceptible de devenir célèbre ?",
+          "Qui est le plus susceptible d'oublier son anniversaire ?",
+          "Qui est le plus susceptible de voyager seul ?",
+          "Qui est le plus susceptible de devenir millionnaire ?",
+          "Qui est le plus susceptible de changer de carrière ?"
+        ]
+      };
+      
+      // Stocker la partie temporairement
+      sessionStorage.setItem('gameData', JSON.stringify(fakeOnlineGame));
+      
       setIsJoining(false);
       toast({
         title: "Partie trouvée !",
         description: "Redirection vers la partie..."
       });
       
-      // Redirection DIRECTE vers la page de rejoindre la partie (qui ensuite redirige vers la salle d'attente)
       setTimeout(() => {
         navigate(`/join/${trimmedCode}`);
       }, 500);
