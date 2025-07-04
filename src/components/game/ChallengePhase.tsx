@@ -1,11 +1,10 @@
-
 import { useState } from 'react';
 import { Player } from '@/types/onlineGame';
 import PlayerAvatar from '@/components/PlayerAvatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dice6, Trophy, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Dice6, Trophy, CheckCircle, Eye, EyeOff, Clock } from 'lucide-react';
 
 interface ChallengePhaseProps {
   winner: Player;

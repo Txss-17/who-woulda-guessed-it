@@ -36,7 +36,7 @@ const PlayGame = () => {
       currentQuestionIndex={currentQuestionIndex}
       totalQuestions={gameData.questions.length}
       aiGenerated={gameData.aiGenerated}
-      onNextQuestion={() => nextQuestion([])}
+      onNextQuestion={() => nextQuestion()}
     />
   );
 };
