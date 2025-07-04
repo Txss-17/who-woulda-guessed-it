@@ -8,16 +8,18 @@ import { useToast } from '@/hooks/use-toast';
 import { Clock, Users, MessageSquare, Play } from 'lucide-react';
 import MessagingDialog from '@/components/messaging/MessagingDialog';
 import { Player, UserStatus } from '@/types/onlineGame';
+import { useGameSync } from '@/hooks/useGameSync';
 
 const WaitingRoom = () => {
   const { gameCode } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
-  const [isHost, setIsHost] = useState(false);
   const [isMessagingOpen, setIsMessagingOpen] = useState(false);
+  
+  const { gameData, isHost } = useGameSync(gameCode || null);
+  const players = gameData?.players || [];
   
   useEffect(() => {
     // Récupérer les données du joueur actuel
@@ -39,56 +41,38 @@ const WaitingRoom = () => {
     };
     setCurrentPlayer(currentPlayerWithStatus);
     
-    // Récupérer les données de la partie
-    const gameDataStr = sessionStorage.getItem('gameData');
-    if (gameDataStr) {
-      const gameData = JSON.parse(gameDataStr);
-      if (gameData.gameCode === gameCode) {
-        // Vérifier si le joueur actuel fait partie de la partie
-        const playerExists = gameData.players.some((p: Player) => p.id === currentPlayerWithStatus.id);
-        
-        if (playerExists) {
-          setPlayers(gameData.players);
-          // Vérifier si c'est l'hôte (premier joueur)
-          setIsHost(gameData.players[0]?.id === currentPlayerWithStatus.id);
-        } else {
-          toast({
-            title: "Erreur",
-            description: "Tu ne fais pas partie de cette partie",
-            variant: "destructive"
-          });
-          navigate('/');
-        }
-      } else {
-        toast({
-          title: "Code invalide",
-          description: "Cette partie n'existe pas",
-          variant: "destructive"
-        });
-        navigate('/');
-      }
-    } else {
+    // Vérifier si la partie existe
+    if (!gameData) {
       toast({
         title: "Erreur",
         description: "Données de partie non trouvées",
         variant: "destructive"
       });
       navigate('/');
+      return;
     }
     
-    // Simuler la mise à jour en temps réel des joueurs
-    const interval = setInterval(() => {
-      const gameDataStr = sessionStorage.getItem('gameData');
-      if (gameDataStr) {
-        const gameData = JSON.parse(gameDataStr);
-        if (gameData.gameCode === gameCode) {
-          setPlayers(gameData.players || []);
-        }
-      }
-    }, 2000);
+    // Vérifier si le joueur fait partie de cette partie
+    if (gameData.gameCode !== gameCode) {
+      toast({
+        title: "Code invalide",
+        description: "Cette partie n'existe pas",
+        variant: "destructive"
+      });
+      navigate('/');
+      return;
+    }
     
-    return () => clearInterval(interval);
-  }, [gameCode, navigate, toast]);
+    const playerExists = gameData.players.some((p: Player) => p.id === currentPlayerWithStatus.id);
+    if (!playerExists) {
+      toast({
+        title: "Erreur",
+        description: "Tu ne fais pas partie de cette partie",
+        variant: "destructive"
+      });
+      navigate('/');
+    }
+  }, [gameCode, gameData, navigate, toast]);
 
   const startGame = () => {
     if (players.length < 2) {
@@ -102,6 +86,19 @@ const WaitingRoom = () => {
     
     navigate(`/play/${gameCode}`);
   };
+
+  if (!gameData || !currentPlayer) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-8 px-4 flex items-center justify-center">
+        <Card className="p-6">
+          <div className="text-center">
+            <Clock className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <p>Chargement de la salle d'attente...</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-8 px-4">

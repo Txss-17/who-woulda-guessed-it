@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import QRCodeDisplay from '@/components/QRCodeDisplay';
 import ShareGameDialog from '@/components/quick-game/ShareGameDialog';
 import { Blob, BackgroundDecoration } from '@/components/DecorativeElements';
+import { useGameSync } from '@/hooks/useGameSync';
 
 const CreateGame = () => {
   const { gameCode } = useParams();
@@ -19,25 +19,20 @@ const CreateGame = () => {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [gameCreated, setGameCreated] = useState(false);
+
+  const { gameData, initializeGame } = useGameSync(gameCode || null);
+  const gameCreated = !!gameData;
 
   const gameUrl = `${window.location.origin}/join/${gameCode}`;
 
   useEffect(() => {
-    // Vérifier si une partie existe déjà avec ce code
-    const existingGameData = sessionStorage.getItem('gameData');
-    if (existingGameData) {
-      const gameData = JSON.parse(existingGameData);
-      if (gameData.gameCode === gameCode) {
-        setGameCreated(true);
-        // Récupérer le nom de l'hôte
-        const hostPlayer = gameData.players[0];
-        if (hostPlayer) {
-          setHostName(hostPlayer.name);
-        }
+    if (gameData) {
+      const hostPlayer = gameData.players[0];
+      if (hostPlayer) {
+        setHostName(hostPlayer.name);
       }
     }
-  }, [gameCode]);
+  }, [gameData]);
 
   const handleCreateGame = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,27 +57,16 @@ const CreateGame = () => {
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(hostName.trim())}&background=6366f1&color=fff`
       };
 
-      // Créer les données de la partie avec l'hôte déjà inclus
-      const gameData = {
-        gameCode,
-        players: [hostPlayer],
-        questions: [
-          "Qui est le plus susceptible de dormir au boulot?",
-          "Qui est le plus susceptible d'oublier l'anniversaire de son/sa partenaire?",
-          "Qui est le plus susceptible de devenir célèbre sur TikTok?",
-          "Qui est le plus susceptible de dépenser tout son argent en une journée?",
-          "Qui est le plus susceptible d'adopter 10 chats?"
-        ],
-        aiGenerated: false
-      };
+      const questions = [
+        "Qui est le plus susceptible de dormir au boulot?",
+        "Qui est le plus susceptible d'oublier l'anniversaire de son/sa partenaire?",
+        "Qui est le plus susceptible de devenir célèbre sur TikTok?",
+        "Qui est le plus susceptible de dépenser tout son argent en une journée?",
+        "Qui est le plus susceptible d'adopter 10 chats?"
+      ];
 
-      // Sauvegarder les données de la partie
-      sessionStorage.setItem('gameData', JSON.stringify(gameData));
-      
-      // Sauvegarder les données du joueur (hôte)
-      sessionStorage.setItem('playerData', JSON.stringify(hostPlayer));
-
-      setGameCreated(true);
+      // Initialiser la partie avec le système de synchronisation
+      initializeGame(hostPlayer, questions);
       
       toast({
         title: "Partie créée !",
@@ -197,7 +181,7 @@ const CreateGame = () => {
           open={isShareOpen}
           onOpenChange={setIsShareOpen}
           gameCode={gameCode || ''}
-          gameData={{ gameCode, players: [], questions: [] }}
+          gameData={gameData || { gameCode, players: [], questions: [] }}
         />
       </div>
     );

@@ -5,17 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChevronLeft, Users, UserCheck, Clock, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useSecureGameJoin } from '@/hooks/useSecureGameJoin';
 import { Blob, BackgroundDecoration } from '@/components/DecorativeElements';
+import { useGameSync } from '@/hooks/useGameSync';
 
 const JoinGame = () => {
   const { gameCode } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { joinGameSecurely, isJoining } = useSecureGameJoin();
   
   const [isJoined, setIsJoined] = useState(false);
   const [gameData, setGameData] = useState<any>(null);
+  
+  const { gameData: syncedGameData, addPlayerToGame } = useGameSync(gameCode || null);
   
   useEffect(() => {
     if (!gameCode) {
@@ -28,20 +29,32 @@ const JoinGame = () => {
       return;
     }
 
-    // Simuler la vérification et la jointure de la partie
-    handleGameJoin();
-  }, [gameCode]);
+    // Vérifier si une partie existe avec ce code
+    if (syncedGameData) {
+      setGameData({
+        gameCode: syncedGameData.gameCode,
+        name: `Partie ${syncedGameData.gameCode}`,
+        playerCount: syncedGameData.players.length,
+        maxPlayers: 8,
+        status: 'waiting'
+      });
+      
+      // Rejoindre automatiquement la partie
+      handleGameJoin();
+    } else {
+      // Partie non trouvée
+      toast({
+        title: "Partie introuvable",
+        description: "Cette partie n'existe pas ou n'est plus disponible",
+        variant: "destructive"
+      });
+      navigate('/');
+    }
+  }, [gameCode, syncedGameData, navigate, toast]);
 
   const handleGameJoin = async () => {
     try {
-      // Simuler une partie existante
-      const mockGameData = {
-        gameCode,
-        name: `Partie ${gameCode}`,
-        playerCount: Math.floor(Math.random() * 4) + 2,
-        maxPlayers: 8,
-        status: 'waiting'
-      };
+      if (!syncedGameData) return;
 
       // Créer un joueur temporaire
       const temporaryPlayer = {
@@ -53,19 +66,10 @@ const JoinGame = () => {
 
       // Stocker les données dans sessionStorage
       sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
-      sessionStorage.setItem('gameData', JSON.stringify({
-        gameCode,
-        players: [temporaryPlayer],
-        questions: [
-          "Qui est le plus susceptible de chanter sous la douche ?",
-          "Qui est le plus susceptible d'oublier son anniversaire ?",
-          "Qui est le plus susceptible de devenir célèbre ?",
-          "Qui est le plus susceptible de partir en vacances sans prévenir ?"
-        ],
-        aiGenerated: true
-      }));
+      
+      // Ajouter le joueur à la partie synchronisée
+      addPlayerToGame(temporaryPlayer);
 
-      setGameData(mockGameData);
       setIsJoined(true);
 
       // Rediriger vers la configuration du nom du joueur
