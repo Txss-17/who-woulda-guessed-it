@@ -72,9 +72,9 @@ const JoinGame = () => {
 
       setIsJoined(true);
 
-      // Rediriger vers la configuration du nom du joueur
+      // Rediriger directement vers la salle d'attente
       setTimeout(() => {
-        navigate(`/player-name-setup/${gameCode}`);
+        navigate(`/waiting-room/${gameCode}`);
       }, 2000);
 
     } catch (error) {
@@ -149,7 +149,7 @@ const JoinGame = () => {
                   <span className="font-medium">Partie rejointe !</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Redirection vers la configuration du nom...
+                  Redirection vers la salle d'attente...
                 </p>
               </div>
             ) : (

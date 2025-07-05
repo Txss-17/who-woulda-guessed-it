@@ -120,6 +120,12 @@ const Navigation = () => {
             <div className="flex items-center gap-2">
               <NotificationCenter />
               <FriendsDialog />
+              <Link 
+                to="/profile" 
+                className="text-sm font-medium text-purple-600 hover:text-purple-700 px-3 py-2 rounded-md hover:bg-purple-50 transition-colors"
+              >
+                Mon Profil
+              </Link>
             </div>
           ) : null}
           <AuthButton />

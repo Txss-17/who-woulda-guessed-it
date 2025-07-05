@@ -74,17 +74,30 @@ const JoinGameByCode = () => {
         ]
       };
       
-      // Stocker la partie temporairement
+      // Créer un joueur temporaire et l'ajouter à la partie
+      const temporaryPlayer = {
+        id: Date.now().toString(),
+        name: `Joueur_${Date.now().toString().slice(-4)}`,
+        status: 'online' as const,
+        avatar: `https://ui-avatars.com/api/?name=Joueur&background=10b981&color=fff`
+      };
+
+      // Ajouter le joueur à la partie
+      fakeOnlineGame.players.push(temporaryPlayer);
+      
+      // Stocker les données
       sessionStorage.setItem('gameData', JSON.stringify(fakeOnlineGame));
+      sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
+      localStorage.setItem(`game_sync_${trimmedCode}`, JSON.stringify(fakeOnlineGame));
       
       setIsJoining(false);
       toast({
         title: "Partie trouvée !",
-        description: "Redirection vers la partie..."
+        description: "Redirection vers la salle d'attente..."
       });
       
       setTimeout(() => {
-        navigate(`/join/${trimmedCode}`);
+        navigate(`/waiting-room/${trimmedCode}`);
       }, 500);
     }, 1500);
   };
