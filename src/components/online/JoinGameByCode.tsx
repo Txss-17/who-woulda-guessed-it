@@ -28,78 +28,16 @@ const JoinGameByCode = () => {
     
     const trimmedCode = gameCode.trim().toUpperCase();
     
-    // Simuler la vérification du code
+    setIsJoining(false);
+    toast({
+      title: "Recherche de la partie...",
+      description: "Redirection vers la partie"
+    });
+    
+    // Rediriger directement vers la page de jointure
     setTimeout(() => {
-      // Vérifier d'abord si c'est une partie rapide dans le sessionStorage
-      const storedGameData = sessionStorage.getItem('gameData');
-      if (storedGameData) {
-        try {
-          const data = JSON.parse(storedGameData);
-          if (data.gameCode === trimmedCode) {
-            setIsJoining(false);
-            toast({
-              title: "Partie rapide trouvée !",
-              description: "Redirection vers la partie..."
-            });
-            setTimeout(() => {
-              navigate(`/join-quick/${trimmedCode}`);
-            }, 500);
-            return;
-          }
-        } catch (error) {
-          console.log('Erreur lors de la vérification du sessionStorage:', error);
-        }
-      }
-      
-      // Créer une fausse partie en ligne pour la démo
-      const fakeOnlineGame = {
-        gameCode: trimmedCode,
-        players: [
-          {
-            id: 'host-1',
-            name: 'Hôte de la partie',
-            status: 'online',
-            avatar: `https://ui-avatars.com/api/?name=Hôte&background=10b981&color=fff`
-          }
-        ],
-        type: 'friendly',
-        status: 'waiting',
-        aiGenerated: true,
-        questions: [
-          "Qui est le plus susceptible de devenir célèbre ?",
-          "Qui est le plus susceptible d'oublier son anniversaire ?",
-          "Qui est le plus susceptible de voyager seul ?",
-          "Qui est le plus susceptible de devenir millionnaire ?",
-          "Qui est le plus susceptible de changer de carrière ?"
-        ]
-      };
-      
-      // Créer un joueur temporaire et l'ajouter à la partie
-      const temporaryPlayer = {
-        id: Date.now().toString(),
-        name: `Joueur_${Date.now().toString().slice(-4)}`,
-        status: 'online' as const,
-        avatar: `https://ui-avatars.com/api/?name=Joueur&background=10b981&color=fff`
-      };
-
-      // Ajouter le joueur à la partie
-      fakeOnlineGame.players.push(temporaryPlayer);
-      
-      // Stocker les données
-      sessionStorage.setItem('gameData', JSON.stringify(fakeOnlineGame));
-      sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
-      localStorage.setItem(`game_sync_${trimmedCode}`, JSON.stringify(fakeOnlineGame));
-      
-      setIsJoining(false);
-      toast({
-        title: "Partie trouvée !",
-        description: "Redirection vers la salle d'attente..."
-      });
-      
-      setTimeout(() => {
-        navigate(`/waiting-room/${trimmedCode}`);
-      }, 500);
-    }, 1500);
+      navigate(`/join/${trimmedCode}`);
+    }, 500);
   };
 
   const handlePasteFromClipboard = async () => {

@@ -25,12 +25,15 @@ const WaitingRoom = () => {
     // Récupérer les données du joueur actuel
     const playerDataStr = sessionStorage.getItem('playerData');
     if (!playerDataStr) {
-      toast({
-        title: "Erreur",
-        description: "Données du joueur non trouvées",
-        variant: "destructive"
-      });
-      navigate('/');
+      // Créer un joueur temporaire si pas de données
+      const temporaryPlayer = {
+        id: Date.now().toString(),
+        name: `Joueur_${Date.now().toString().slice(-4)}`,
+        status: 'online' as UserStatus,
+        avatar: `https://ui-avatars.com/api/?name=Joueur&background=10b981&color=fff`
+      };
+      sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
+      setCurrentPlayer(temporaryPlayer);
       return;
     }
     
@@ -41,36 +44,16 @@ const WaitingRoom = () => {
     };
     setCurrentPlayer(currentPlayerWithStatus);
     
-    // Vérifier si la partie existe
+    // Si pas de gameData, attendre qu'elle se charge
     if (!gameData) {
-      toast({
-        title: "Erreur",
-        description: "Données de partie non trouvées",
-        variant: "destructive"
-      });
-      navigate('/');
       return;
     }
     
-    // Vérifier si le joueur fait partie de cette partie
-    if (gameData.gameCode !== gameCode) {
-      toast({
-        title: "Code invalide",
-        description: "Cette partie n'existe pas",
-        variant: "destructive"
-      });
-      navigate('/');
-      return;
-    }
-    
+    // Vérifier si le joueur fait partie de cette partie, sinon l'ajouter
     const playerExists = gameData.players.some((p: Player) => p.id === currentPlayerWithStatus.id);
     if (!playerExists) {
-      toast({
-        title: "Erreur",
-        description: "Tu ne fais pas partie de cette partie",
-        variant: "destructive"
-      });
-      navigate('/');
+      // Le joueur n'est pas encore dans la partie, on l'ajoute via useGameSync
+      return;
     }
   }, [gameCode, gameData, navigate, toast]);
 

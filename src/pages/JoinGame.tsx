@@ -29,27 +29,29 @@ const JoinGame = () => {
       return;
     }
 
-    // Vérifier si une partie existe avec ce code
-    if (syncedGameData) {
-      setGameData({
-        gameCode: syncedGameData.gameCode,
-        name: `Partie ${syncedGameData.gameCode}`,
-        playerCount: syncedGameData.players.length,
-        maxPlayers: 8,
-        status: 'waiting'
-      });
-      
-      // Rejoindre automatiquement la partie
-      handleGameJoin();
-    } else {
-      // Partie non trouvée
-      toast({
-        title: "Partie introuvable",
-        description: "Cette partie n'existe pas ou n'est plus disponible",
-        variant: "destructive"
-      });
-      navigate('/');
-    }
+    // Attendre un peu pour que useGameSync puisse charger les données
+    const timer = setTimeout(() => {
+      if (syncedGameData) {
+        setGameData({
+          gameCode: syncedGameData.gameCode,
+          name: `Partie ${syncedGameData.gameCode}`,
+          playerCount: syncedGameData.players.length,
+          maxPlayers: 8,
+          status: 'waiting'
+        });
+        
+        // Rejoindre automatiquement la partie
+        handleGameJoin();
+      } else {
+        // Continuer à attendre ou afficher un message
+        toast({
+          title: "Recherche en cours...",
+          description: "Recherche de la partie en cours",
+        });
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [gameCode, syncedGameData, navigate, toast]);
 
   const handleGameJoin = async () => {
