@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import QRCodeDisplay from '@/components/QRCodeDisplay';
 import ShareGameDialog from '@/components/quick-game/ShareGameDialog';
 import { Blob, BackgroundDecoration } from '@/components/DecorativeElements';
-import { useGameSync } from '@/hooks/useGameSync';
+import { useRealtimeGameSync } from '@/hooks/useRealtimeGameSync';
 
 const CreateGame = () => {
   const { gameCode } = useParams();
@@ -20,7 +20,7 @@ const CreateGame = () => {
   const [showQR, setShowQR] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  const { gameData, initializeGame } = useGameSync(gameCode || null);
+  const { gameData, createGame } = useRealtimeGameSync(gameCode || null);
   const gameCreated = !!gameData;
 
   const gameUrl = `${window.location.origin}/join/${gameCode}`;
@@ -49,14 +49,6 @@ const CreateGame = () => {
     setIsCreating(true);
 
     try {
-      // Créer les données de l'hôte
-      const hostPlayer = {
-        id: Date.now().toString(),
-        name: hostName.trim(),
-        status: 'online' as const,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(hostName.trim())}&background=6366f1&color=fff`
-      };
-
       const questions = [
         "Qui est le plus susceptible de dormir au boulot?",
         "Qui est le plus susceptible d'oublier l'anniversaire de son/sa partenaire?",
@@ -65,8 +57,23 @@ const CreateGame = () => {
         "Qui est le plus susceptible d'adopter 10 chats?"
       ];
 
-      // Initialiser la partie avec le système de synchronisation
-      initializeGame(hostPlayer, questions);
+      // Créer la partie avec Supabase
+      const game = await createGame(gameCode!, hostName.trim(), questions);
+      
+      if (!game) {
+        throw new Error('Impossible de créer la partie');
+      }
+
+      // Créer les données du joueur hôte
+      const hostPlayer = {
+        id: Date.now().toString(),
+        name: hostName.trim(),
+        status: 'online' as const,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(hostName.trim())}&background=6366f1&color=fff`
+      };
+
+      // Stocker les données du joueur
+      sessionStorage.setItem('playerData', JSON.stringify(hostPlayer));
       
       toast({
         title: "Partie créée !",

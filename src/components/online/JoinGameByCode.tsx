@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link, Hash, Loader2, QrCode, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const JoinGameByCode = () => {
   const navigate = useNavigate();
@@ -28,16 +29,42 @@ const JoinGameByCode = () => {
     
     const trimmedCode = gameCode.trim().toUpperCase();
     
-    setIsJoining(false);
-    toast({
-      title: "Recherche de la partie...",
-      description: "Redirection vers la partie"
-    });
-    
-    // Rediriger directement vers la page de jointure
-    setTimeout(() => {
-      navigate(`/join/${trimmedCode}`);
-    }, 500);
+    try {
+      // Vérifier que la partie existe dans Supabase
+      const { data, error } = await supabase
+        .from('realtime_games')
+        .select('code, status')
+        .eq('code', trimmedCode)
+        .eq('status', 'waiting')
+        .single();
+
+      if (error || !data) {
+        toast({
+          title: "Partie non trouvée",
+          description: "Aucune partie en attente avec ce code",
+          variant: "destructive"
+        });
+        setIsJoining(false);
+        return;
+      }
+
+      toast({
+        title: "Partie trouvée !",
+        description: "Redirection vers la partie..."
+      });
+      
+      // Rediriger vers la page de jointure
+      setTimeout(() => {
+        navigate(`/join/${trimmedCode}`);
+      }, 500);
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de vérifier la partie",
+        variant: "destructive"
+      });
+      setIsJoining(false);
+    }
   };
 
   const handlePasteFromClipboard = async () => {

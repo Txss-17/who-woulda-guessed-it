@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { ChevronLeft, Users, UserCheck, Clock, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Blob, BackgroundDecoration } from '@/components/DecorativeElements';
-import { useGameSync } from '@/hooks/useGameSync';
+import { useRealtimeGameSync } from '@/hooks/useRealtimeGameSync';
 
 const JoinGame = () => {
   const { gameCode } = useParams();
@@ -14,9 +14,9 @@ const JoinGame = () => {
   const { toast } = useToast();
   
   const [isJoined, setIsJoined] = useState(false);
-  const [gameData, setGameData] = useState<any>(null);
+  const [displayGameData, setDisplayGameData] = useState<any>(null);
   
-  const { gameData: syncedGameData, addPlayerToGame } = useGameSync(gameCode || null);
+  const { gameData, addPlayerToGame, isLoading } = useRealtimeGameSync(gameCode || null);
   
   useEffect(() => {
     if (!gameCode) {
@@ -29,34 +29,33 @@ const JoinGame = () => {
       return;
     }
 
-    // Attendre un peu pour que useGameSync puisse charger les données
-    const timer = setTimeout(() => {
-      if (syncedGameData) {
-        setGameData({
-          gameCode: syncedGameData.gameCode,
-          name: `Partie ${syncedGameData.gameCode}`,
-          playerCount: syncedGameData.players.length,
-          maxPlayers: 8,
-          status: 'waiting'
-        });
-        
-        // Rejoindre automatiquement la partie
-        handleGameJoin();
-      } else {
-        // Continuer à attendre ou afficher un message
-        toast({
-          title: "Recherche en cours...",
-          description: "Recherche de la partie en cours",
-        });
-      }
-    }, 1000);
+    // Attendre que les données se chargent
+    if (isLoading) return;
 
-    return () => clearTimeout(timer);
-  }, [gameCode, syncedGameData, navigate, toast]);
+    if (gameData) {
+      setDisplayGameData({
+        gameCode: gameData.code,
+        name: `Partie de ${gameData.host_name}`,
+        playerCount: gameData.players.length,
+        maxPlayers: gameData.max_players,
+        status: 'waiting'
+      });
+      
+      // Auto-joindre la partie
+      handleGameJoin();
+    } else {
+      toast({
+        title: "Partie non trouvée",
+        description: "La partie avec ce code n'existe pas",
+        variant: "destructive"
+      });
+      navigate('/');
+    }
+  }, [gameCode, gameData, isLoading, navigate, toast]);
 
   const handleGameJoin = async () => {
     try {
-      if (!syncedGameData) return;
+      if (!gameData) return;
 
       // Créer un joueur temporaire
       const temporaryPlayer = {
@@ -69,15 +68,24 @@ const JoinGame = () => {
       // Stocker les données dans sessionStorage
       sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
       
-      // Ajouter le joueur à la partie synchronisée
-      addPlayerToGame(temporaryPlayer);
+      // Ajouter le joueur à la partie
+      const success = await addPlayerToGame(temporaryPlayer);
+      
+      if (!success) {
+        throw new Error('Impossible de rejoindre la partie');
+      }
 
       setIsJoined(true);
+      
+      toast({
+        title: "Partie rejointe !",
+        description: "Redirection vers la salle d'attente..."
+      });
 
-      // Rediriger directement vers la salle d'attente
+      // Rediriger vers la salle d'attente
       setTimeout(() => {
         navigate(`/waiting-room/${gameCode}`);
-      }, 2000);
+      }, 1500);
 
     } catch (error) {
       toast({
@@ -89,7 +97,7 @@ const JoinGame = () => {
     }
   };
 
-  if (!gameData) {
+  if (!displayGameData) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4 flex items-center justify-center">
         <Card className="p-6">
@@ -135,11 +143,11 @@ const JoinGame = () => {
             </div>
 
             <div className="bg-secondary/30 p-4 rounded-lg">
-              <h3 className="font-medium mb-2">{gameData.name}</h3>
+              <h3 className="font-medium mb-2">{displayGameData.name}</h3>
               <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Users className="h-4 w-4" />
-                  <span>{gameData.playerCount}/{gameData.maxPlayers} joueurs</span>
+                  <span>{displayGameData.playerCount}/{displayGameData.maxPlayers} joueurs</span>
                 </div>
               </div>
             </div>

@@ -1,88 +1,78 @@
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { OnlineGame, Player } from '@/types/onlineGame';
 
 export const useGameList = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [publicGames, setPublicGames] = useState<OnlineGame[]>([]);
 
-  // Simuler le chargement des parties publiques
+  // Charger les vraies parties publiques depuis Supabase
   useEffect(() => {
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      const fakeGames: OnlineGame[] = [
-        {
-          id: 'game1',
-          name: 'Soirée Fun',
-          players: { 
-            count: 3, 
-            max: 6, 
-            list: [
-              { id: 'p1', name: 'Alex', status: 'online' },
-              { id: 'p2', name: 'Robin', status: 'online' },
-              { id: 'p3', name: 'Charlie', status: 'online' }
-            ]
-          },
-          host: 'Alex',
-          type: 'classic',
-          status: 'waiting'
-        },
-        {
-          id: 'game2',
-          name: 'Questions Love',
-          players: { 
-            count: 2, 
-            max: 4,
-            list: [
-              { id: 'p4', name: 'Jordan', status: 'online' },
-              { id: 'p5', name: 'Sam', status: 'online' }
-            ]
-          },
-          host: 'Jordan',
-          type: 'love',
-          status: 'waiting'
-        },
-        {
-          id: 'game3',
-          name: 'Entre amis',
-          players: { 
-            count: 4, 
-            max: 5,
-            list: [
-              { id: 'p6', name: 'Taylor', status: 'online' },
-              { id: 'p7', name: 'Morgan', status: 'online' },
-              { id: 'p8', name: 'Casey', status: 'online' },
-              { id: 'p9', name: 'Riley', status: 'online' }
-            ] 
-          },
-          host: 'Taylor',
-          type: 'friendly',
-          status: 'waiting'
-        },
-        {
-          id: 'game4',
-          name: 'Party Night',
-          players: { 
-            count: 5, 
-            max: 8,
-            list: [
-              { id: 'p10', name: 'Sam', status: 'online' },
-              { id: 'p11', name: 'Alex', status: 'online' },
-              { id: 'p12', name: 'Jamie', status: 'online' },
-              { id: 'p13', name: 'Blake', status: 'online' },
-              { id: 'p14', name: 'Quinn', status: 'online' }
-            ]
-          },
-          host: 'Sam',
-          type: 'party',
-          status: 'playing'
-        }
-      ];
+    const loadPublicGames = async () => {
+      setIsLoading(true);
       
-      setPublicGames(fakeGames);
-      setIsLoading(false);
-    }, 1500);
+      try {
+        const { data, error } = await supabase
+          .from('realtime_games')
+          .select('*')
+          .eq('status', 'waiting')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Erreur lors du chargement des parties:', error);
+          setPublicGames([]);
+          return;
+        }
+
+        // Convertir les données en format OnlineGame
+        const games: OnlineGame[] = (data || []).map(game => {
+          const players = Array.isArray(game.players) ? (game.players as any[]).filter(p => p && typeof p === 'object' && p.id && p.name) as Player[] : [];
+          return {
+            id: game.code,
+            name: `Partie de ${game.host_name}`,
+            players: {
+              count: players.length,
+              max: game.max_players,
+              list: players
+            },
+            host: game.host_name,
+            type: game.game_type as 'classic' | 'love' | 'friendly' | 'party',
+            status: 'waiting' as const
+          };
+        });
+
+        setPublicGames(games);
+      } catch (error) {
+        console.error('Erreur lors du chargement des parties:', error);
+        setPublicGames([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPublicGames();
+
+    // Écouter les changements en temps réel
+    const channel = supabase
+      .channel('public_games')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'realtime_games'
+        },
+        () => {
+          // Recharger la liste quand une partie change
+          loadPublicGames();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {

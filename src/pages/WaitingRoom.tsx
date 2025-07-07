@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Clock, Users, MessageSquare, Play } from 'lucide-react';
 import MessagingDialog from '@/components/messaging/MessagingDialog';
 import { Player, UserStatus } from '@/types/onlineGame';
-import { useGameSync } from '@/hooks/useGameSync';
+import { useRealtimeGameSync } from '@/hooks/useRealtimeGameSync';
 
 const WaitingRoom = () => {
   const { gameCode } = useParams();
@@ -18,7 +18,7 @@ const WaitingRoom = () => {
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isMessagingOpen, setIsMessagingOpen] = useState(false);
   
-  const { gameData, isHost } = useGameSync(gameCode || null);
+  const { gameData, isHost } = useRealtimeGameSync(gameCode || null);
   const players = gameData?.players || [];
   
   useEffect(() => {

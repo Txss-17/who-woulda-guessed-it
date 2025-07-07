@@ -646,6 +646,51 @@ export type Database = {
           },
         ]
       }
+      realtime_games: {
+        Row: {
+          code: string
+          created_at: string | null
+          current_question: number | null
+          game_type: string | null
+          host_id: string | null
+          host_name: string
+          id: string
+          max_players: number | null
+          players: Json | null
+          questions: Json | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          current_question?: number | null
+          game_type?: string | null
+          host_id?: string | null
+          host_name: string
+          id?: string
+          max_players?: number | null
+          players?: Json | null
+          questions?: Json | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          current_question?: number | null
+          game_type?: string | null
+          host_id?: string | null
+          host_name?: string
+          id?: string
+          max_players?: number | null
+          players?: Json | null
+          questions?: Json | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       sessions_ia: {
         Row: {
           game_id: number | null
