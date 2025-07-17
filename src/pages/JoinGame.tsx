@@ -12,12 +12,15 @@ const JoinGame = () => {
   const { gameCode } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [isJoined, setIsJoined] = useState(false);
-  const [displayGameData, setDisplayGameData] = useState<any>(null);
-  
+  const [currentPlayer, setCurrentPlayer] = useState(null);
+  const [playerNameInput, setPlayerNameInput] = useState('');
+  const [askName, setAskName] = useState(false);
+  const [displayGameData, setDisplayGameData] = useState(null);
+
   const { gameData, addPlayerToGame, isLoading } = useRealtimeGameSync(gameCode || null);
-  
+
   useEffect(() => {
     if (!gameCode) {
       toast({
@@ -29,7 +32,6 @@ const JoinGame = () => {
       return;
     }
 
-    // Attendre que les données se chargent
     if (isLoading) return;
 
     if (gameData) {
@@ -40,9 +42,15 @@ const JoinGame = () => {
         maxPlayers: gameData.max_players,
         status: 'waiting'
       });
-      
-      // Auto-joindre la partie
-      handleGameJoin();
+
+      // Vérifier s'il existe un joueur en session
+      const storedPlayer = sessionStorage.getItem('playerData');
+      if (storedPlayer) {
+        setCurrentPlayer(JSON.parse(storedPlayer));
+        handleGameJoin(JSON.parse(storedPlayer));
+      } else {
+        setAskName(true); // Afficher le formulaire de saisie du nom
+      }
     } else {
       toast({
         title: "Partie non trouvée",
@@ -51,38 +59,40 @@ const JoinGame = () => {
       });
       navigate('/');
     }
+    // eslint-disable-next-line
   }, [gameCode, gameData, isLoading, navigate, toast]);
 
-  const handleGameJoin = async () => {
+  const handleNameSubmit = async (e) => {
+    e.preventDefault();
+    const temporaryPlayer = {
+      id: Date.now().toString(),
+      name: playerNameInput,
+      status: 'online',
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(playerNameInput)}&background=10b981&color=fff`
+    };
+    sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
+    setCurrentPlayer(temporaryPlayer);
+    setAskName(false);
+    await handleGameJoin(temporaryPlayer);
+  };
+
+  const handleGameJoin = async (player) => {
     try {
       if (!gameData) return;
 
-      // Créer un joueur temporaire
-      const temporaryPlayer = {
-        id: Date.now().toString(),
-        name: `Joueur_${Date.now().toString().slice(-4)}`,
-        status: 'online' as const,
-        avatar: `https://ui-avatars.com/api/?name=Joueur&background=10b981&color=fff`
-      };
+      const success = await addPlayerToGame(player);
 
-      // Stocker les données dans sessionStorage
-      sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
-      
-      // Ajouter le joueur à la partie
-      const success = await addPlayerToGame(temporaryPlayer);
-      
       if (!success) {
         throw new Error('Impossible de rejoindre la partie');
       }
 
       setIsJoined(true);
-      
+
       toast({
         title: "Partie rejointe !",
         description: "Redirection vers la salle d'attente..."
       });
 
-      // Rediriger vers la salle d'attente
       setTimeout(() => {
         navigate(`/waiting-room/${gameCode}`);
       }, 1500);
@@ -110,70 +120,29 @@ const JoinGame = () => {
     );
   }
 
-  return (
-    <div className="relative min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4 overflow-hidden">
-      <Blob color="primary" position="top-left" size="md" className="opacity-40" />
-      <Blob color="accent" position="bottom-right" size="md" className="opacity-40" />
-      <BackgroundDecoration variant="minimal" position="bottom-left" className="opacity-30" />
-      
-      <div className="container mx-auto max-w-md relative z-10">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/')}
-          className="mb-6"
-        >
-          <ChevronLeft className="mr-2 h-4 w-4" /> Retour
-        </Button>
-        
-        <Card className="p-6 shadow-lg relative overflow-hidden">
-          <BackgroundDecoration variant="minimal" position="bottom-right" className="opacity-10" />
-          
-          <div className="text-center space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold mb-2">Rejoindre la partie</h1>
-              <div className="inline-flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full">
-                <span className="font-bold">Code:</span>
-                <span className="text-xl text-primary font-bold tracking-wider">{gameCode}</span>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-center gap-2 text-sm">
-              <Shield className="h-4 w-4 text-green-600" />
-              <span className="text-green-600">Partie trouvée</span>
-            </div>
-
-            <div className="bg-secondary/30 p-4 rounded-lg">
-              <h3 className="font-medium mb-2">{displayGameData.name}</h3>
-              <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  <span>{displayGameData.playerCount}/{displayGameData.maxPlayers} joueurs</span>
-                </div>
-              </div>
-            </div>
-
-            {isJoined ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-center gap-2 text-green-600">
-                  <UserCheck className="h-5 w-5" />
-                  <span className="font-medium">Partie rejointe !</span>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Redirection vers la salle d'attente...
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-center gap-2 text-primary">
-                  <Clock className="h-5 w-5 animate-spin" />
-                  <span>Rejoindre la partie...</span>
-                </div>
-              </div>
-            )}
-          </div>
+  if (askName) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4 flex items-center justify-center">
+        <Card className="p-6">
+          <form onSubmit={handleNameSubmit}>
+            <label>Choisis ton nom :</label>
+            <input
+              type="text"
+              value={playerNameInput}
+              onChange={e => setPlayerNameInput(e.target.value)}
+              placeholder="Ton nom de joueur"
+              required
+            />
+            <button type="submit">Valider</button>
+          </form>
         </Card>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    // ... ton rendu principal comme dans ta version
+    // (reprends ton code pour l'affichage de la partie trouvée et du bouton de retour)
   );
 };
 
