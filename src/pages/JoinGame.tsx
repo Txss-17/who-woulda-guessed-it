@@ -49,7 +49,7 @@ const JoinGame = () => {
     }
 
    if (gameData?.statuts === 'started') {
-    navigate(`/waiting-room/${gameCode}`);
+     navigate(`/waiting-room/${gameCode}`);
    }, [gameData, gameCode, navigate]);
 
       // Vérifier s'il existe un joueur en session
