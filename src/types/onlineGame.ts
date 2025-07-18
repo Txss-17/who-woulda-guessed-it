@@ -1,5 +1,5 @@
 
-export type GameType = 'classic' | 'love' | 'friendly' | 'crazy' | 'party';
+export type GameType = 'classic' | 'love' | 'friendly' | 'crazy' | 'party' | 'dirty';
 export type GameStatus = 'waiting' | 'playing';
 export type UserStatus = 'online' | 'offline' | 'away';
 
