@@ -138,7 +138,7 @@ const JoinGame = () => {
         </Card>
       </div>
     );
-  }
+  };
 
   return (
     // ... ton rendu principal comme dans ta version
