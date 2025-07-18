@@ -69,7 +69,7 @@ const QuickGame = () => {
       setIsGenerating(true);
       const aiQuestions = await generateQuestions(questionType, 10);
       setQuestions(aiQuestions);
-      setSelectedQuestions(aiQuestions.slice(0, 5).map(q => q.id));
+      setSelectedQuestions(aiQuestions.slice(0, 6).map(q => q.id));
       
       toast({
         title: "Questions générées",
@@ -156,7 +156,7 @@ const QuickGame = () => {
       generateAIQuestions();
     } else {
       setQuestions(getPredefinedQuestions());
-      setSelectedQuestions(getPredefinedQuestions().slice(0, 5).map(q => q.id));
+      setSelectedQuestions(getPredefinedQuestions().slice(0, 6).map(q => q.id));
     }
   }, [questionSource, questionType]);
 
