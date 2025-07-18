@@ -66,7 +66,7 @@ const defaultQuestions = {
     "avoir des fantasmes bizarres",
     "coucher avec un(e) ex par simple envie",
     "ne pas se souvenir du prénom de quelqu'un après avoir couché avec"
-  ]
+  ],
 };
 
 export const getPredefinedQuestions = (): Question[] => {
