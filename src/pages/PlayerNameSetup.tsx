@@ -143,9 +143,8 @@ const PlayerNameSetup = () => {
           });
           
           // Rediriger vers la salle d'attente
-          setTimeout(() => {
-            navigate(`/waiting-room/${gameCode}`);
-          }, 2000);
+          navigate(`/waiting-room/${gameCode}`);
+          });
         } catch (error) {
           setIsUpdating(false);
           toast({
@@ -154,7 +153,7 @@ const PlayerNameSetup = () => {
             variant: "destructive"
           });
         }
-      }, 2000);
+      });
     } catch (error) {
       setIsUpdating(false);
       toast({
