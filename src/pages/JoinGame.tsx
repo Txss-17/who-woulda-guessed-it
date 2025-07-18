@@ -141,8 +141,9 @@ const JoinGame = () => {
   }
 
   return (
-    // ... ton rendu principal comme dans ta version
-    // (reprends ton code pour l'affichage de la partie trouvée et du bouton de retour)
+    <div>
+      {/* ton JSX */}
+    </div>
   );
 }
 
