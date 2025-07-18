@@ -55,7 +55,11 @@ const WaitingRoom = () => {
       // Le joueur n'est pas encore dans la partie, on l'ajoute via useGameSync
       return;
     }
-  }, [gameCode, gameData, navigate, toast]);
+
+    if (gameData?.gameStarted) {
+     navigate(`/play/${gameCode}`);
+   }
+  }, [gameCode, gameData, navigate, toast, gameData?.gameStarted, navigate]);
 
   const startGame = () => {
     if (players.length < 2) {
@@ -66,7 +70,9 @@ const WaitingRoom = () => {
       });
       return;
     }
-    
+
+  // Mettre à jour l'état "gameStarted" dans la base
+  await updateGameData(gameCode, { gameStarted: true });
     navigate(`/play/${gameCode}`);
   };
 
