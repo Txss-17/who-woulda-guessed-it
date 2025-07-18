@@ -145,7 +145,7 @@ const PlayerNameSetup = () => {
           // Rediriger vers la salle d'attente
           setTimeout(() => {
             navigate(`/waiting-room/${gameCode}`);
-          }, 1000);
+          }, 2000);
         } catch (error) {
           setIsUpdating(false);
           toast({
@@ -154,7 +154,7 @@ const PlayerNameSetup = () => {
             variant: "destructive"
           });
         }
-      }, 1000);
+      }, 2000);
     } catch (error) {
       setIsUpdating(false);
       toast({
