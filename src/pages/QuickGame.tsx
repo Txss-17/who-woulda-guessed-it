@@ -295,7 +295,7 @@ const QuickGame = () => {
                     <div className="mb-4">
                       <h3 className="text-sm font-medium mb-2">Type de questions</h3>
                       <div className="flex flex-wrap gap-2">
-                        {(['classic', 'love', 'friendly', 'crazy', 'party'] as QuestionType[]).map((type) => (
+                        {(['classic', 'love', 'friendly', 'crazy', 'party', 'dirty'] as QuestionType[]).map((type) => (
                           <Badge 
                             key={type}
                             variant={questionType === type ? "default" : "outline"}
@@ -305,7 +305,9 @@ const QuickGame = () => {
                             {type === 'classic' ? 'Classique' : 
                              type === 'love' ? 'Amour' :
                              type === 'friendly' ? 'Amitié' :
-                             type === 'crazy' ? 'Folie' : 'Fête'}
+                             type === 'crazy' ? 'Folie' : 
+                             type === 'party' ? 'Fête' :
+                             type === 'dirty' ? 'dirty' : type}
                           </Badge>
                         ))}
                       </div>
