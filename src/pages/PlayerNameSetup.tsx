@@ -144,7 +144,6 @@ const PlayerNameSetup = () => {
           
           // Rediriger vers la salle d'attente
           navigate(`/waiting-room/${gameCode}`);
-          });
         } catch (error) {
           setIsUpdating(false);
           toast({
