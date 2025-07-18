@@ -1,5 +1,5 @@
 
-export type QuestionType = 'classic' | 'love' | 'friendly' | 'crazy' | 'party';
+export type QuestionType = 'classic' | 'love' | 'friendly' | 'crazy' | 'party' | 'dirty';
 
 interface Question {
   id: string;
@@ -56,6 +56,16 @@ const defaultQuestions = {
     "draguer quelqu'un en soirée",
     "perdre ses clés en soirée",
     "finir la soirée dans un fast-food"
+  ],
+  dirty: [
+    "coucher au premier rendez-vous"
+    "faire l'amour dans un milieu public"
+    "avoir eu un plan à trois (ou d'en vouloir un)"
+    "envoyer des nudes sans y réfléchir"
+    "avoir déjà eu une sex tape"
+    "avoir des fantasmes bizarres"
+    "coucher avec un(e) ex par simple envie"
+    "ne pas se souvenir du prénom de quelqu'un après avoir couché avec"
   ]
 };
 
