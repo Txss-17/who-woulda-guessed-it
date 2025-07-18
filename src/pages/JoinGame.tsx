@@ -43,15 +43,6 @@ const JoinGame = () => {
         status: 'waiting'
       });
 
-    if (gameData?.status === 'waiting) {
-      //On attend le passage à 'started'
-      return;
-    }
-
-   if (gameData?.statuts === 'started') {
-     navigate(`/waiting-room/${gameCode}`);
-   }, [gameData, gameCode, navigate]);
-
       // Vérifier s'il existe un joueur en session
       const storedPlayer = sessionStorage.getItem('playerData');
       if (storedPlayer) {
