@@ -60,7 +60,7 @@ const defaultQuestions = {
   dirty: [
     "coucher au premier rendez-vous",
     "faire l'amour dans un milieu public",
-    "avoir eu un plan à trois (ou d'en vouloir un)",
+    "avoir eu un plan à trois ou d'en vouloir un",
     "envoyer des nudes sans y réfléchir",
     "avoir déjà eu une sex tape",
     "avoir des fantasmes bizarres",
