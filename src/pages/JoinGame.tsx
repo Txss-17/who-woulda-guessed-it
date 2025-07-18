@@ -94,7 +94,6 @@ const JoinGame = () => {
       });
 
       navigate(`/waiting-room/${gameCode}`);
-      });
 
     } catch (error) {
       toast({
