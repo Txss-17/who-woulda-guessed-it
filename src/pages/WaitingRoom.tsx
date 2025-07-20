@@ -9,6 +9,8 @@ import { Clock, Users, MessageSquare, Play } from 'lucide-react';
 import MessagingDialog from '@/components/messaging/MessagingDialog';
 import { Player, UserStatus } from '@/types/onlineGame';
 import { useRealtimeGameSync } from '@/hooks/useRealtimeGameSync';
+import { updateGameData } from '@/lib/yourDatabaseUtilsFile';
+
 
 const WaitingRoom = () => {
   const { gameCode } = useParams();
