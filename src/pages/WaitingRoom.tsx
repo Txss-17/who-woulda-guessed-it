@@ -61,7 +61,7 @@ const WaitingRoom = () => {
    }
   }, [gameCode, gameData, navigate, toast, gameData?.gameStarted, navigate]);
 
-  const startGame = () => {
+  const startGame = async () => {
     if (players.length < 2) {
       toast({
         title: "Pas assez de joueurs",
