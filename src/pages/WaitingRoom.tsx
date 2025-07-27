@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -23,8 +22,10 @@ const WaitingRoom = () => {
   const { gameData, isHost, addPlayerToGame } = useRealtimeGameSync(gameCode || null);
   const players = gameData?.players || [];
 
+  // 1. Créer le joueur si nécessaire
   useEffect(() => {
-    const playerDataStr = sessionStorage.getItem('playerData');
+    let playerDataStr = sessionStorage.getItem('playerData');
+
     if (!playerDataStr) {
       const temporaryPlayer = {
         id: Date.now().toString(),
@@ -33,8 +34,7 @@ const WaitingRoom = () => {
         avatar: `https://ui-avatars.com/api/?name=Joueur&background=10b981&color=fff`
       };
       sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
-      setCurrentPlayer(temporaryPlayer);
-      return;
+      playerDataStr = JSON.stringify(temporaryPlayer);
     }
 
     const playerData = JSON.parse(playerDataStr);
@@ -43,19 +43,21 @@ const WaitingRoom = () => {
       status: 'online' as UserStatus,
     };
     setCurrentPlayer(currentPlayerWithStatus);
+  }, []);
 
-    if (!gameData) return;
+  // 2. Ajouter le joueur à la partie une fois prêt
+  useEffect(() => {
+    if (!currentPlayer || !gameData) return;
 
-    const playerExists = gameData.players.some((p: Player) => p.id === currentPlayerWithStatus.id);
+    const playerExists = gameData.players.some((p: Player) => p.id === currentPlayer.id);
     if (!playerExists) {
-      addPlayerToGame(currentPlayerWithStatus);
-      return;
+      addPlayerToGame(currentPlayer);
     }
 
     if (gameData?.gameStarted) {
       navigate(`/play/${gameCode}`);
     }
-  }, [gameCode, gameData, navigate, toast, gameData?.gameStarted, navigate]);
+  }, [currentPlayer, gameData]);
 
   const startGame = async () => {
     if (players.length < 2) {
@@ -70,12 +72,6 @@ const WaitingRoom = () => {
     await updateGameData(gameCode, { gameStarted: true });
     navigate(`/play/${gameCode}`);
   };
-
-  useEffect(() => {
-    if (gameData?.gameStarted) {
-      navigate(`/play/${gameCode}`);
-    }
-  }, [gameData?.gameStarted, navigate, gameCode]);
 
   if (!gameData || !currentPlayer) {
     return (
