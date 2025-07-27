@@ -9,7 +9,7 @@ import { Clock, Users, MessageSquare, Play } from 'lucide-react';
 import MessagingDialog from '@/components/messaging/MessagingDialog';
 import { Player, UserStatus } from '@/types/onlineGame';
 import { useRealtimeGameSync } from '@/hooks/useRealtimeGameSync';
-import { updateGameData } from '@/lib/yourDatabaseUtilsFile';
+import { useGameSync } from '@/hooks/useGameSync';
 
 
 const WaitingRoom = () => {
@@ -20,7 +20,7 @@ const WaitingRoom = () => {
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isMessagingOpen, setIsMessagingOpen] = useState(false);
   
-  const { gameData, isHost } = useRealtimeGameSync(gameCode || null);
+  const { gameData, isHost, addPlayerToGame } = useRealtimeGameSync(gameCode || null);
   const players = gameData?.players || [];
   
   useEffect(() => {
@@ -54,6 +54,7 @@ const WaitingRoom = () => {
     // Vérifier si le joueur fait partie de cette partie, sinon l'ajouter
     const playerExists = gameData.players.some((p: Player) => p.id === currentPlayerWithStatus.id);
     if (!playerExists) {
+      addPlayerToGame(currentPlayerWithStatus);
       // Le joueur n'est pas encore dans la partie, on l'ajoute via useGameSync
       return;
     }
@@ -185,3 +186,4 @@ const WaitingRoom = () => {
 };
 
 export default WaitingRoom;
+
