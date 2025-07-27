@@ -10,6 +10,8 @@ import MessagingDialog from '@/components/messaging/MessagingDialog';
 import { Player, UserStatus } from '@/types/onlineGame';
 import { useRealtimeGameSync } from '@/hooks/useRealtimeGameSync';
 import { useGameSync } from '@/hooks/useGameSync';
+import { updateGameData } from '@/integrations/supabase/updateGameData';
+
 
 
 const WaitingRoom = () => {
