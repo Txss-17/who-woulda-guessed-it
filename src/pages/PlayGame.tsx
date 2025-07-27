@@ -13,7 +13,7 @@ const PlayGame = () => {
     currentQuestionIndex,
     gameOver,
     currentPlayer: hookPlayer,
-    gameCode,
+    gameCode: gameCodeFromHook,
     nextQuestion
   } = usePlayGame();
 
