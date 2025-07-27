@@ -1,17 +1,38 @@
 
 import { usePlayGame } from '@/hooks/usePlayGame';
+import { Player } from '@/types/onlineGame';
 import GameContainer from '@/components/game/GameContainer';
 import GameResult from '@/components/game/GameResult';
 
 const PlayGame = () => {
+  const navigate = useNavigate();
+  const { gameCode } = useParams();
+  const [localPlayer, setLocalPlayer] = useState<Player | null>(null); 
   const {
     gameData,
     currentQuestionIndex,
     gameOver,
-    currentPlayer,
+    currentPlayer: hookPlayer,
     gameCode,
     nextQuestion
   } = usePlayGame();
+
+  // Lecture de sessionStorage si le hook ne renvoie pas encore le joueur
+  useEffect(() => {
+    if (!hookPlayer) {
+      const playerStr = sessionStorage.getItem('playerData');
+      if (playerStr) {
+        const parsedPlayer = JSON.parse(playerStr);
+        setLocalPlayer(parsedPlayer);
+      }
+    }
+  }, [hookPlayer]);
+
+  const currentPlayer = hookPlayer || localPlayer;
+
+  // Débogage
+  console.log("gameData", gameData);
+  console.log("currentPlayer", currentPlayer);
 
   if (!gameData || !currentPlayer) {
     return (
