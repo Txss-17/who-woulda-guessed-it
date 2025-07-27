@@ -12,24 +12,20 @@ import { useRealtimeGameSync } from '@/hooks/useRealtimeGameSync';
 import { useGameSync } from '@/hooks/useGameSync';
 import { updateGameData } from '@/integrations/supabase/updateGameData';
 
-
-
 const WaitingRoom = () => {
   const { gameCode } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isMessagingOpen, setIsMessagingOpen] = useState(false);
-  
+
   const { gameData, isHost, addPlayerToGame } = useRealtimeGameSync(gameCode || null);
   const players = gameData?.players || [];
-  
+
   useEffect(() => {
-    // Récupérer les données du joueur actuel
     const playerDataStr = sessionStorage.getItem('playerData');
     if (!playerDataStr) {
-      // Créer un joueur temporaire si pas de données
       const temporaryPlayer = {
         id: Date.now().toString(),
         name: `Joueur_${Date.now().toString().slice(-4)}`,
@@ -40,30 +36,25 @@ const WaitingRoom = () => {
       setCurrentPlayer(temporaryPlayer);
       return;
     }
-    
+
     const playerData = JSON.parse(playerDataStr);
     const currentPlayerWithStatus: Player = {
       ...playerData,
       status: 'online' as UserStatus,
     };
     setCurrentPlayer(currentPlayerWithStatus);
-    
-    // Si pas de gameData, attendre qu'elle se charge
-    if (!gameData) {
-      return;
-    }
-    
-    // Vérifier si le joueur fait partie de cette partie, sinon l'ajouter
+
+    if (!gameData) return;
+
     const playerExists = gameData.players.some((p: Player) => p.id === currentPlayerWithStatus.id);
     if (!playerExists) {
       addPlayerToGame(currentPlayerWithStatus);
-      // Le joueur n'est pas encore dans la partie, on l'ajoute via useGameSync
       return;
     }
 
     if (gameData?.gameStarted) {
-     navigate(`/play/${gameCode}`);
-   }
+      navigate(`/play/${gameCode}`);
+    }
   }, [gameCode, gameData, navigate, toast, gameData?.gameStarted, navigate]);
 
   const startGame = async () => {
@@ -76,10 +67,15 @@ const WaitingRoom = () => {
       return;
     }
 
-  // Mettre à jour l'état "gameStarted" dans la base
-  await updateGameData(gameCode, { gameStarted: true });
+    await updateGameData(gameCode, { gameStarted: true });
     navigate(`/play/${gameCode}`);
   };
+
+  useEffect(() => {
+    if (gameData?.gameStarted) {
+      navigate(`/play/${gameCode}`);
+    }
+  }, [gameData?.gameStarted, navigate, gameCode]);
 
   if (!gameData || !currentPlayer) {
     return (
@@ -103,20 +99,20 @@ const WaitingRoom = () => {
             <span className="font-bold">Code:</span>
             <span className="text-xl text-primary font-bold tracking-wider">{gameCode}</span>
           </div>
-          
+
           <div className="mb-8">
             <div className="flex items-center justify-center gap-2 text-muted-foreground">
               <Clock className="h-5 w-5" />
               <span>En attente de joueurs...</span>
             </div>
           </div>
-          
+
           <div className="mb-6">
             <div className="flex items-center justify-center gap-1 mb-4">
               <Users className="h-5 w-5 text-muted-foreground" />
               <h2 className="text-lg font-medium">Joueurs ({players.length})</h2>
             </div>
-            
+
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 justify-items-center">
               {players.map(player => (
                 <div
@@ -138,7 +134,7 @@ const WaitingRoom = () => {
               ))}
             </div>
           </div>
-          
+
           <div className="flex gap-2 justify-center">
             {isHost && (
               <Button
@@ -150,7 +146,7 @@ const WaitingRoom = () => {
                 Démarrer la partie
               </Button>
             )}
-            
+
             <Button
               variant="outline"
               onClick={() => {
@@ -161,7 +157,7 @@ const WaitingRoom = () => {
             >
               Quitter
             </Button>
-            
+
             <Button
               variant="secondary"
               onClick={() => setIsMessagingOpen(true)}
@@ -172,7 +168,7 @@ const WaitingRoom = () => {
           </div>
         </Card>
       </div>
-      
+
       {currentPlayer && (
         <MessagingDialog
           open={isMessagingOpen}
@@ -188,4 +184,3 @@ const WaitingRoom = () => {
 };
 
 export default WaitingRoom;
-
