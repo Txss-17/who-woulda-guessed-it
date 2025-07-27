@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Blob, BackgroundDecoration } from '@/components/DecorativeElements';
 import { useRealtimeGameSync } from '@/hooks/useRealtimeGameSync';
 
+
 const JoinGame = () => {
   const { gameCode } = useParams();
   const navigate = useNavigate();
