@@ -9,8 +9,8 @@ export const listenToGame = (gameCode: string, callback: (data: any) => void) =>
       {
         event: 'UPDATE',
         schema: 'public',
-        table: 'games',
-        filter: `code=eq.${gameCode}`,
+        table: 'parties',
+        filter: `code_invitation=eq.${gameCode}`,
       },
       (payload) => {
         callback(payload.new);

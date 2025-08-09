@@ -3,10 +3,10 @@ import { supabase } from './client';
 
 export const getGameData = async (gameCode: string) => {
   const { data, error } = await supabase
-    .from('games') // remplace 'games' si ta table s'appelle autrement
+    .from('parties')
     .select('*')
-    .eq('code', gameCode)
-    .single();
+    .eq('code_invitation', gameCode.toUpperCase())
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Erreur Supabase : ${error.message}`);

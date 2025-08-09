@@ -3,43 +3,41 @@ import { supabase } from '@/integrations/supabase/client';
 import { Player } from '@/types/onlineGame';
 
 interface DatabaseGame {
-  id: string;
-  code: string;
-  host_id: string | null;
-  host_name: string;
-  status: string;
-  max_players: number;
-  players: any;
-  questions: any;
-  current_question: number;
-  game_type: string;
-  created_at: string;
-  updated_at: string;
+  id: number;
+  code_invitation: string;
+  host_user_id: string | null;
+  statut: string;
+  max_players: number | null;
+  created_at: string | null;
+  updated_at?: string | null;
+  type_jeu: string;
 }
 
+
 interface RealtimeGameData {
-  id: string;
+  id: number;
   code: string;
   host_id: string | null;
-  host_name: string;
+  host_name?: string;
   status: 'waiting' | 'playing' | 'finished';
   max_players: number;
   players: Player[];
   questions: string[];
-  current_question: number;
-  game_type: string;
-  created_at: string;
-  updated_at: string;
+  current_question?: number;
+  game_type?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
+
 // Fonction utilitaire pour convertir les données de la base
-const convertDatabaseGame = (dbGame: DatabaseGame): RealtimeGameData => {
-  return {
-    ...dbGame,
-    status: dbGame.status as 'waiting' | 'playing' | 'finished',
-    players: Array.isArray(dbGame.players) ? dbGame.players as Player[] : [],
-    questions: Array.isArray(dbGame.questions) ? dbGame.questions as string[] : []
-  };
+const mapPlayers = (rows: any[]): Player[] => {
+  return (rows || []).map((r) => ({
+    id: String(r.id),
+    name: r.pseudo_temporaire || 'Joueur',
+    status: 'online',
+    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(r.pseudo_temporaire || 'Joueur')}&background=10b981&color=fff`
+  }));
 };
 
 export const useRealtimeGameSync = (gameCode: string | null) => {
@@ -50,87 +48,112 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
   // Charger une partie existante par son code
   const loadGame = async (code: string) => {
     try {
-      const { data, error } = await supabase
-        .from('realtime_games')
+      const { data: party, error } = await supabase
+        .from('parties')
         .select('*')
-        .eq('code', code.toUpperCase())
-        .single();
+        .eq('code_invitation', code.toUpperCase())
+        .maybeSingle();
 
       if (error) {
         console.error('Erreur lors du chargement de la partie:', error);
         return null;
       }
 
-      return convertDatabaseGame(data as DatabaseGame);
+      if (!party) return null;
+
+      // Charger les joueurs
+      const { data: playerRows, error: playersError } = await supabase
+        .from('game_players')
+        .select('id, pseudo_temporaire')
+        .eq('game_id', (party as any).id);
+
+      if (playersError) {
+        console.error('Erreur lors du chargement des joueurs:', playersError);
+      }
+
+      const mapped: RealtimeGameData = {
+        id: (party as any).id,
+        code: (party as any).code_invitation,
+        host_id: (party as any).host_user_id || null,
+        host_name: 'Hôte',
+        status: ((party as any).statut === 'playing' ? 'playing' : 'waiting'),
+        max_players: (party as any).max_players || 8,
+        players: mapPlayers(playerRows || []),
+        questions: [],
+        created_at: (party as any).date_creation || null,
+        updated_at: null,
+      };
+
+      return mapped;
     } catch (error) {
       console.error('Erreur lors du chargement de la partie:', error);
       return null;
     }
   };
 
-  // Créer une nouvelle partie
   const createGame = async (code: string, hostName: string, questions: string[]) => {
     try {
       const { data, error } = await supabase
-        .from('realtime_games')
+        .from('parties')
         .insert({
-          code: code.toUpperCase(),
-          host_name: hostName,
-          players: [],
-          questions: questions,
-          status: 'waiting',
+          code_invitation: code.toUpperCase(),
+          type_jeu: 'classic',
+          mode: 'standard',
+          statut: 'waiting',
           max_players: 8,
-          game_type: 'classic'
+          invite_link: null,
+          host_user_id: null,
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Erreur lors de la création de la partie:', error);
         return null;
       }
 
-      return convertDatabaseGame(data as DatabaseGame);
+      if (!data) return null;
+
+      const mapped = await loadGame(code);
+      return mapped;
     } catch (error) {
       console.error('Erreur lors de la création de la partie:', error);
       return null;
     }
   };
 
-  // Ajouter un joueur à la partie
   const addPlayerToGame = async (player: Player) => {
     if (!gameData) return false;
 
     try {
-      // Vérifier si le joueur existe déjà
+      // Vérifier si le joueur existe déjà (par pseudo)
       const existingPlayers = gameData.players || [];
-      const playerExists = existingPlayers.some(p => p.id === player.id);
+      const playerExists = existingPlayers.some(p => p.name.toLowerCase() === player.name.toLowerCase());
       
       if (playerExists) {
         return true; // Le joueur est déjà dans la partie
       }
 
-      const updatedPlayers = [...existingPlayers, player];
-
       const { data, error } = await supabase
-        .from('realtime_games')
-        .update({ 
-          players: updatedPlayers as any,
-          updated_at: new Date().toISOString()
+        .from('game_players')
+        .insert({
+          game_id: gameData.id,
+          pseudo_temporaire: player.name,
+          user_id: null
         })
-        .eq('code', gameData.code)
-        .select()
-        .single();
+        .select('id, pseudo_temporaire')
+        .maybeSingle();
 
       if (error) {
-        console.error('Erreur lors de l\'ajout du joueur:', error);
+        console.error("Erreur lors de l'ajout du joueur:", error);
         return false;
       }
 
-      setGameData(convertDatabaseGame(data as DatabaseGame));
+      const newPlayers = mapPlayers([data]);
+      setGameData({ ...gameData, players: [...existingPlayers, ...newPlayers] });
       return true;
     } catch (error) {
-      console.error('Erreur lors de l\'ajout du joueur:', error);
+      console.error("Erreur lors de l'ajout du joueur:", error);
       return false;
     }
   };
@@ -149,12 +172,12 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
       if (game) {
         setGameData(game);
         
-        // Vérifier si l'utilisateur actuel est l'hôte
+        // Vérifier si l'utilisateur actuel est l'hôte (simple: premier joueur)
         const playerData = sessionStorage.getItem('playerData');
         if (playerData) {
           try {
             const currentPlayer = JSON.parse(playerData);
-            setIsHost(game.players[0]?.id === currentPlayer.id);
+            setIsHost(game.players[0]?.name?.toLowerCase() === currentPlayer.name?.toLowerCase());
           } catch (error) {
             console.error('Erreur lors du parsing des données du joueur:', error);
           }
@@ -167,35 +190,52 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
     initializeGame();
   }, [gameCode]);
 
-  // Écouter les changements en temps réel
   useEffect(() => {
-    if (!gameCode) return;
+    if (!gameCode || !gameData) return;
 
-    const channel = supabase
-      .channel(`game_${gameCode}`)
+    // Écoute des changements sur la partie (statut)
+    const partyChannel = supabase
+      .channel(`party_${gameCode}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'realtime_games',
-          filter: `code=eq.${gameCode.toUpperCase()}`
+          table: 'parties',
+          filter: `code_invitation=eq.${gameCode.toUpperCase()}`
         },
-        (payload) => {
-          console.log('Mise à jour temps réel:', payload);
-          if (payload.eventType === 'UPDATE' && payload.new) {
-            setGameData(convertDatabaseGame(payload.new as DatabaseGame));
-          } else if (payload.eventType === 'DELETE') {
-            setGameData(null);
+        async (payload) => {
+          if (payload.new) {
+            const refreshed = await loadGame(gameCode);
+            if (refreshed) setGameData(refreshed);
           }
         }
       )
       .subscribe();
 
+    // Écoute des changements sur les joueurs de la partie
+    const playersChannel = supabase
+      .channel(`party_players_${gameCode}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'game_players',
+          filter: `game_id=eq.${gameData.id}`
+        },
+        async () => {
+          const refreshed = await loadGame(gameCode);
+          if (refreshed) setGameData(refreshed);
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(partyChannel);
+      supabase.removeChannel(playersChannel);
     };
-  }, [gameCode]);
+  }, [gameCode, gameData?.id]);
 
   return {
     gameData,
@@ -205,4 +245,3 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
     createGame,
     loadGame
   };
-};

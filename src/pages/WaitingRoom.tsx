@@ -54,7 +54,7 @@ const WaitingRoom = () => {
       addPlayerToGame(currentPlayer);
     }
 
-    if (gameData?.gameStarted) {
+    if (gameData?.status === 'playing') {
       navigate(`/play/${gameCode}`);
     }
   }, [currentPlayer, gameData]);
@@ -69,7 +69,7 @@ const WaitingRoom = () => {
       return;
     }
 
-    await updateGameData(gameCode, { gameStarted: true });
+    await updateGameData(gameCode, { statut: 'playing' });
     navigate(`/play/${gameCode}`);
   };
 
@@ -93,7 +93,7 @@ const WaitingRoom = () => {
           <h1 className="text-2xl font-bold mb-2">Salle d'attente</h1>
           <div className="inline-flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full mb-6">
             <span className="font-bold">Code:</span>
-            <span className="text-xl text-primary font-bold tracking-wider">{gameCode}</span>
+            <span className="text-xl text-primary font-bold tracking-wider">{gameData?.code}</span>
           </div>
 
           <div className="mb-8">

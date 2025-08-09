@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GameType, typeLabels } from '@/types/onlineGame';
-import { Zap, Heart, Users, PartyPopper, Smile, Sparkles } from 'lucide-react';
+import { Zap, Heart, Users, PartyPopper, Smile, Sparkles, Flame } from 'lucide-react';
 
 interface MatchmakingOptionsProps {
   onStartMatchmaking: (type: GameType) => void;
@@ -14,6 +14,7 @@ const gameTypeIcons: Record<GameType, any> = {
   friendly: Users,
   party: PartyPopper,
   crazy: Smile,
+  dirty: Flame,
 };
 
 const gameTypeDescriptions: Record<GameType, string> = {
@@ -22,6 +23,7 @@ const gameTypeDescriptions: Record<GameType, string> = {
   friendly: "Questions entre amis",
   party: "Questions festives et amusantes",
   crazy: "Questions folles et décalées",
+  dirty: "Questions osées (18+)",
 };
 
 const MatchmakingOptions = ({ onStartMatchmaking }: MatchmakingOptionsProps) => {

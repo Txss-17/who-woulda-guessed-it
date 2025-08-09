@@ -34,12 +34,13 @@ export interface Message {
   read: boolean;
 }
 
-export const typeLabels = {
+export const typeLabels: Record<GameType, string> = {
   classic: 'Classique',
   love: 'Amour',
   friendly: 'Amitié',
   crazy: 'Folie',
-  party: 'Fête'
+  party: 'Fête',
+  dirty: 'Coquin'
 };
 
 export const userStatusLabels = {

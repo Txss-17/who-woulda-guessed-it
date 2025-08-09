@@ -38,10 +38,10 @@ const JoinGame = () => {
     if (gameData) {
       setDisplayGameData({
         gameCode: gameData.code,
-        name: `Partie de ${gameData.host_name}`,
+        name: `Partie ${gameData.code}`,
         playerCount: gameData.players.length,
         maxPlayers: gameData.max_players,
-        status: 'waiting'
+        status: gameData.status
       });
 
       // Vérifier s'il existe un joueur en session

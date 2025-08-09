@@ -14,10 +14,11 @@ export const useGameList = () => {
       
       try {
         const { data, error } = await supabase
-          .from('realtime_games')
+          .from('parties')
           .select('*')
-          .eq('status', 'waiting')
-          .order('created_at', { ascending: false });
+          .eq('party_type', 'public')
+          .eq('statut', 'waiting')
+          .order('date_creation', { ascending: false });
 
         if (error) {
           console.error('Erreur lors du chargement des parties:', error);
@@ -25,20 +26,18 @@ export const useGameList = () => {
           return;
         }
 
-        // Convertir les données en format OnlineGame
         const games: OnlineGame[] = (data || []).map(game => {
-          const players = Array.isArray(game.players) ? (game.players as any[]).filter(p => p && typeof p === 'object' && p.id && p.name) as Player[] : [];
           return {
-            id: game.code,
-            name: `Partie de ${game.host_name}`,
+            id: String(game.id),
+            name: game.invite_link || `Partie ${game.code_invitation}`,
             players: {
-              count: players.length,
-              max: game.max_players,
-              list: players
+              count: 0,
+              max: game.max_players || 8,
+              list: [] as Player[]
             },
-            host: game.host_name,
-            type: game.game_type as 'classic' | 'love' | 'friendly' | 'party',
-            status: 'waiting' as const
+            host: game.host_user_id || 'Hôte',
+            type: (game.type_jeu || 'classic') as any,
+            status: (game.statut === 'playing' ? 'playing' : 'waiting') as const
           };
         });
 
@@ -61,7 +60,7 @@ export const useGameList = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'realtime_games'
+          table: 'parties'
         },
         () => {
           // Recharger la liste quand une partie change

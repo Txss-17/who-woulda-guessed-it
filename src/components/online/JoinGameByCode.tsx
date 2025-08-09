@@ -32,11 +32,11 @@ const JoinGameByCode = () => {
     try {
       // Vérifier que la partie existe dans Supabase
       const { data, error } = await supabase
-        .from('realtime_games')
-        .select('code, status')
-        .eq('code', trimmedCode)
-        .eq('status', 'waiting')
-        .single();
+        .from('parties')
+        .select('id, code_invitation, statut')
+        .eq('code_invitation', trimmedCode)
+        .eq('statut', 'waiting')
+        .maybeSingle();
 
       if (error || !data) {
         toast({
@@ -52,11 +52,7 @@ const JoinGameByCode = () => {
         title: "Partie trouvée !",
         description: "Redirection vers la partie..."
       });
-      
-      // Rediriger vers la page de jointure
-      setTimeout(() => {
-        navigate(`/join/${trimmedCode}`);
-      }, 500);
+      navigate(`/join/${trimmedCode}`);
     } catch (error) {
       toast({
         title: "Erreur",
@@ -72,7 +68,7 @@ const JoinGameByCode = () => {
       const text = await navigator.clipboard.readText();
       
       // Extraire le code de partie depuis un lien ou utiliser le texte directement
-      const codeMatch = text.match(/\/join\/([A-Z0-9]{4,8})/i) || text.match(/\/join-quick\/([A-Z0-9]{4,8})/i);
+      const codeMatch = text.match(/\/(join|waiting-room)\/([A-Z0-9]{4,8})/i) || text.match(/join-quick\/([A-Z0-9]{4,8})/i);
       if (codeMatch) {
         setGameCode(codeMatch[1].toUpperCase());
         toast({
