@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@/types/onlineGame';
+import { useRealtimeRounds } from '@/hooks/useRealtimeRounds';
+import { updateGameData } from '@/integrations/supabase/updateGameData';
 
 interface GameData {
   gameCode: string;
@@ -23,7 +25,7 @@ export const usePlayGame = () => {
   const { toast } = useToast();
   
   const [gameData, setGameData] = useState<GameData | null>(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const { currentQuestionIndex, goToNextQuestion } = useRealtimeRounds(gameCode, 0);
   const [gameOver, setGameOver] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [gameResults, setGameResults] = useState<QuestionResult[]>([]);
@@ -71,12 +73,15 @@ export const usePlayGame = () => {
     }
     
     if (currentQuestionIndex < gameData.questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      goToNextQuestion();
     } else {
       // Fin de partie
       setGameOver(true);
-      
-      // Sauvegarder l'historique de la partie avec tous les résultats
+      // Marquer la partie comme terminée côté serveur
+      if (gameCode) {
+        updateGameData(gameCode, { statut: 'finished' }).catch(console.error);
+      }
+
       const gameHistory = JSON.parse(sessionStorage.getItem('gameHistory') || '[]');
       const finalResults = questionResult ? [...gameResults, questionResult] : gameResults;
       

@@ -53,6 +53,8 @@ const GameContainer = ({
           players={players}
           currentQuestion={currentQuestion}
           currentPlayer={currentPlayer}
+          currentQuestionIndex={currentQuestionIndex}
+          gameCode={gameCode}
           onNextQuestion={onNextQuestion}
         />
       </div>
