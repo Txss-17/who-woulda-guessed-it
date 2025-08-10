@@ -37,7 +37,7 @@ export const useGameList = () => {
             },
             host: game.host_user_id || 'Hôte',
             type: (game.type_jeu || 'classic') as any,
-            status: (game.statut === 'playing' ? 'playing' : 'waiting') as const
+            status: (game.statut === 'playing' ? 'playing' : 'waiting')
           };
         });
 

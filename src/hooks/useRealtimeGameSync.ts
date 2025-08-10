@@ -245,3 +245,4 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
     createGame,
     loadGame
   };
+};
