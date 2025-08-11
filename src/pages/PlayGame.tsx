@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePlayGame } from '@/hooks/usePlayGame';
+import { useRealtimeRounds } from '@/hooks/useRealtimeRounds';
 import { Player } from '@/types/onlineGame';
 import GameContainer from '@/components/game/GameContainer';
 import GameResult from '@/components/game/GameResult';
@@ -17,6 +18,9 @@ const PlayGame = () => {
     gameCode: gameCodeFromHook,
     nextQuestion
   } = usePlayGame();
+
+  const { currentQuestionIndex: syncedIndex, goToNextQuestion } = useRealtimeRounds(gameCode, currentQuestionIndex);
+  const displayIndex = syncedIndex ?? currentQuestionIndex;
 
   // Lecture de sessionStorage si le hook ne renvoie pas encore le joueur
   useEffect(() => {
@@ -47,7 +51,7 @@ const PlayGame = () => {
     return <GameResult gameCode={gameCode} gameData={gameData} gameResults={[]} />;
   }
   
-  const currentQuestion = gameData.questions[currentQuestionIndex];
+  const currentQuestion = gameData.questions[displayIndex];
 
   return (
     <GameContainer
@@ -55,10 +59,10 @@ const PlayGame = () => {
       players={gameData.players}
       currentPlayer={currentPlayer}
       currentQuestion={currentQuestion}
-      currentQuestionIndex={currentQuestionIndex}
+      currentQuestionIndex={displayIndex}
       totalQuestions={gameData.questions.length}
       aiGenerated={gameData.aiGenerated}
-      onNextQuestion={() => nextQuestion()}
+      onNextQuestion={() => { nextQuestion(); goToNextQuestion(); }}
     />
   );
 };

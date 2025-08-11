@@ -19,6 +19,10 @@ const ResultsPhase = ({
   winningPlayer, 
   nextQuestion 
 }: ResultsPhaseProps) => {
+  const counts = votes || {};
+  const maxCount = Object.values(counts).length ? Math.max(...Object.values(counts)) : 0;
+  const tiedPlayers = players.filter(p => (counts[p.id] || 0) === maxCount && maxCount > 0);
+  const isTie = tiedPlayers.length > 1;
   return (
     <div className="bg-card p-6 rounded-lg shadow-md animate-reveal">
       <h3 className="text-lg font-medium mb-6 text-center">Résultats</h3>
@@ -45,13 +49,19 @@ const ResultsPhase = ({
         ))}
       </div>
       
-      {winningPlayer && (
+      {isTie ? (
+        <div className="text-center mb-6">
+          <p className="text-xl font-bold">
+            Égalité entre {tiedPlayers.map(p => p.name).join(', ')} pour {currentQuestion.toLowerCase()}
+          </p>
+        </div>
+      ) : winningPlayer ? (
         <div className="text-center mb-6">
           <p className="text-xl font-bold">
             {winningPlayer.name} est le plus susceptible de {currentQuestion.toLowerCase()}
           </p>
         </div>
-      )}
+      ) : null}
       
       <div className="flex justify-center">
         <Button 
