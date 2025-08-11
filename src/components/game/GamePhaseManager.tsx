@@ -5,6 +5,7 @@ import VotingPhase from '@/components/game/VotingPhase';
 import ResultsPhase from '@/components/game/ResultsPhase';
 import ChallengePhase from '@/components/game/ChallengePhase';
 import { saveVote } from '@/integrations/supabase/saveVote';
+import { useRealtimeVotes } from '@/hooks/useRealtimeVotes';
 
 interface GamePhaseManagerProps {
   players: Player[];
@@ -36,6 +37,12 @@ const GamePhaseManager = ({
     getCurrentQuestionResult
   } = useGameVotes({ players });
 
+  const { votes: realtimeVotes, winningPlayerId: realtimeWinnerId } = useRealtimeVotes({
+    gameCode,
+    questionIndex: currentQuestionIndex,
+    players,
+  });
+
   const handleConfirmVote = () => {
     confirmVote(currentQuestion);
     // Persist the current player's vote
@@ -62,7 +69,10 @@ const GamePhaseManager = ({
     onNextQuestion(questionResult);
   };
 
-  const winningPlayer = getWinningPlayer();
+  const simulatedWinningPlayer = getWinningPlayer();
+  const finalVotes = (realtimeVotes && Object.keys(realtimeVotes).length > 0) ? realtimeVotes : votes;
+  const realtimeWinningPlayer = players.find(p => p.id === (realtimeWinnerId || '')) || null;
+  const finalWinningPlayer = realtimeWinningPlayer || simulatedWinningPlayer;
 
   if (gamePhase === 'voting') {
     return (
@@ -79,18 +89,18 @@ const GamePhaseManager = ({
     return (
       <ResultsPhase 
         players={players}
-        votes={votes}
+        votes={finalVotes}
         currentQuestion={currentQuestion}
-        winningPlayer={winningPlayer}
+        winningPlayer={finalWinningPlayer}
         nextQuestion={handleResultsNext}
       />
     );
   }
 
-  if (gamePhase === 'challenge' && winningPlayer) {
+  if (gamePhase === 'challenge' && finalWinningPlayer) {
     return (
       <ChallengePhase
-        winner={winningPlayer}
+        winner={finalWinningPlayer}
         players={players}
         currentPlayer={currentPlayer}
         onChallengeComplete={handleChallengeComplete}
