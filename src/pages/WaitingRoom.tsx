@@ -49,14 +49,22 @@ const WaitingRoom = () => {
   useEffect(() => {
     if (!currentPlayer || !gameData) return;
 
-    const playerExists = gameData.players.some((p: Player) => p.id === currentPlayer.id);
-    if (!playerExists) {
-      addPlayerToGame(currentPlayer);
-    }
+    const run = async () => {
+      const playerExists = gameData.players.some((p: Player) => p.id === currentPlayer.id);
+      if (!playerExists) {
+        const created = await addPlayerToGame(currentPlayer);
+        if (created) {
+          sessionStorage.setItem('playerData', JSON.stringify(created));
+          setCurrentPlayer(created);
+        }
+      }
 
-    if (gameData?.status === 'playing') {
-      navigate(`/play/${gameCode}`);
-    }
+      if (gameData?.status === 'playing') {
+        navigate(`/play/${gameCode}`);
+      }
+    };
+
+    run();
   }, [currentPlayer, gameData]);
 
   const startGame = async () => {

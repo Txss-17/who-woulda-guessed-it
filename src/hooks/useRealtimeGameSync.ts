@@ -123,15 +123,18 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
   };
 
   const addPlayerToGame = async (player: Player) => {
-    if (!gameData) return false;
+    if (!gameData) return null;
 
     try {
-      // Vérifier si le joueur existe déjà (par pseudo)
+      // Éviter les doublons par pseudo (tolérant à la casse)
       const existingPlayers = gameData.players || [];
-      const playerExists = existingPlayers.some(p => p.name.toLowerCase() === player.name.toLowerCase());
-      
+      const playerExists = existingPlayers.some(
+        (p) => p.name.trim().toLowerCase() === player.name.trim().toLowerCase()
+      );
       if (playerExists) {
-        return true; // Le joueur est déjà dans la partie
+        return existingPlayers.find(
+          (p) => p.name.trim().toLowerCase() === player.name.trim().toLowerCase()
+        ) as Player;
       }
 
       const { data, error } = await supabase
@@ -139,22 +142,43 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
         .insert({
           game_id: gameData.id,
           pseudo_temporaire: player.name,
-          user_id: null
+          user_id: null,
         })
         .select('id, pseudo_temporaire')
         .maybeSingle();
 
-      if (error) {
+      if (error || !data) {
         console.error("Erreur lors de l'ajout du joueur:", error);
-        return false;
+        return null;
       }
 
-      const newPlayers = mapPlayers([data]);
-      setGameData({ ...gameData, players: [...existingPlayers, ...newPlayers] });
-      return true;
+      const created: Player = {
+        id: String((data as any).id),
+        name: (data as any).pseudo_temporaire || player.name,
+        status: 'online',
+        avatar:
+          player.avatar ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            (data as any).pseudo_temporaire || player.name
+          )}&background=10b981&color=fff`,
+      };
+
+      // Mettre à jour l'état local
+      setGameData({ ...gameData, players: [...existingPlayers, created] });
+
+      // Synchroniser la session avec l'ID DB du joueur
+      try {
+        const stored = sessionStorage.getItem('playerData');
+        const parsed = stored ? JSON.parse(stored) : {};
+        sessionStorage.setItem('playerData', JSON.stringify({ ...parsed, ...created }));
+      } catch (e) {
+        // Ignorer erreurs de parsing
+      }
+
+      return created;
     } catch (error) {
       console.error("Erreur lors de l'ajout du joueur:", error);
-      return false;
+      return null;
     }
   };
 

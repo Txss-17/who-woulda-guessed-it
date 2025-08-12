@@ -29,14 +29,20 @@ export const useRealtimeVotes = ({ gameCode, questionIndex, players }: UseRealti
     const idToName = idToNameRef.current;
     const nameToLocalId: Record<string, string> = {};
 
-    players.forEach(p => {
-      // Use lower-cased name for case-insensitive matching
+    players.forEach((p) => {
       nameToLocalId[p.name.trim().toLowerCase()] = p.id;
     });
 
     const counts: Record<string, number> = {};
 
-    rows.forEach(r => {
+    rows.forEach((r) => {
+      // 1) Correspondance par ID direct si possible
+      const localById = players.find((p) => p.id === String(r.target_player_id))?.id;
+      if (localById) {
+        counts[localById] = (counts[localById] || 0) + 1;
+        return;
+      }
+      // 2) Fallback: correspondance par nom (insensible à la casse/espaces)
       const targetName = idToName[r.target_player_id]?.trim().toLowerCase();
       if (!targetName) return;
       const localId = nameToLocalId[targetName];
@@ -51,13 +57,18 @@ export const useRealtimeVotes = ({ gameCode, questionIndex, players }: UseRealti
   const deriveWinner = (counts: Record<string, number>) => {
     let winner: string | null = null;
     let max = -1;
+    let tieCount = 0;
     Object.entries(counts).forEach(([pid, cnt]) => {
       if (cnt > max) {
         max = cnt;
         winner = pid;
+        tieCount = 1;
+      } else if (cnt === max) {
+        tieCount += 1;
       }
     });
-    return winner;
+    // S'il y a égalité pour le maximum, retourner null pour signaler une égalité
+    return tieCount > 1 ? null : winner;
   };
 
   useEffect(() => {
@@ -127,14 +138,21 @@ export const useRealtimeVotes = ({ gameCode, questionIndex, players }: UseRealti
             if (row.question_index !== questionIndex) return;
 
             // Update counts incrementally
-            const idToNameNow = idToNameRef.current;
-            const targetName = idToNameNow[row.target_player_id]?.trim().toLowerCase();
-            if (!targetName) return;
-            const localId = players.find(p => p.name.trim().toLowerCase() === targetName)?.id;
+            // 1) Correspondance par ID direct
+            const localById = players.find((p) => p.id === String(row.target_player_id))?.id;
+            let localId = localById;
+            if (!localId) {
+              // 2) Fallback: correspondance par nom
+              const idToNameNow = idToNameRef.current;
+              const targetName = idToNameNow[row.target_player_id]?.trim().toLowerCase();
+              if (targetName) {
+                localId = players.find((p) => p.name.trim().toLowerCase() === targetName)?.id || null;
+              }
+            }
             if (!localId) return;
 
-            setVotes(prev => {
-              const next = { ...prev, [localId]: (prev[localId] || 0) + 1 };
+            setVotes((prev) => {
+              const next = { ...prev, [localId!]: (prev[localId!] || 0) + 1 };
               setWinningPlayerId(deriveWinner(next));
               return next;
             });

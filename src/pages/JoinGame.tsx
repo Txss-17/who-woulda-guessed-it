@@ -81,11 +81,15 @@ const JoinGame = () => {
     try {
       if (!gameData) return;
 
-      const success = await addPlayerToGame(player);
+      const created = await addPlayerToGame(player);
 
-      if (!success) {
+      if (!created) {
         throw new Error('Impossible de rejoindre la partie');
       }
+
+      // Mettre à jour la session et l'état avec l'ID DB du joueur
+      sessionStorage.setItem('playerData', JSON.stringify(created));
+      setCurrentPlayer(created);
 
       setIsJoined(true);
 
