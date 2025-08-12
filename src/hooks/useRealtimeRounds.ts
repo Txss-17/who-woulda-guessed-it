@@ -13,6 +13,7 @@ export const useRealtimeRounds = (gameCode: string | undefined, initialIndex: nu
     if (!gameCode) return;
 
     let isMounted = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const ensureState = async () => {
       // Try to fetch existing realtime game state
@@ -51,7 +52,7 @@ export const useRealtimeRounds = (gameCode: string | undefined, initialIndex: nu
       }
 
       // Subscribe to realtime updates for this code
-      const channel = supabase
+      channel = supabase
         .channel(`realtime_rounds_${gameCode}`)
         .on(
           'postgres_changes',
@@ -62,17 +63,13 @@ export const useRealtimeRounds = (gameCode: string | undefined, initialIndex: nu
           }
         )
         .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
     };
 
-    const cleanupPromise = ensureState();
+    ensureState();
 
     return () => {
       isMounted = false;
-      // cleanup is handled inside ensureState subscribe return when resolved
+      if (channel) supabase.removeChannel(channel);
     };
   }, [gameCode]);
 

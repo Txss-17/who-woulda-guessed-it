@@ -3,18 +3,19 @@ import { supabase } from './client';
 let gameIdCache: Record<string, number> = {};
 
 const getGameIdByCode = async (gameCode: string): Promise<number | null> => {
-  if (gameIdCache[gameCode]) return gameIdCache[gameCode];
+  const codeKey = gameCode.toUpperCase();
+  if (gameIdCache[codeKey]) return gameIdCache[codeKey];
   const { data, error } = await supabase
     .from('parties')
     .select('id')
-    .eq('code_invitation', gameCode.toUpperCase())
+    .eq('code_invitation', codeKey)
     .maybeSingle();
   if (error) {
     console.error('Erreur récupération game id:', error);
     return null;
   }
   if (data?.id) {
-    gameIdCache[gameCode] = data.id as number;
+    gameIdCache[codeKey] = data.id as number;
     return data.id as number;
   }
   return null;
@@ -26,6 +27,7 @@ const getPlayerIdByName = async (gameId: number, name: string): Promise<number |
     .select('id, pseudo_temporaire')
     .eq('game_id', gameId)
     .ilike('pseudo_temporaire', name)
+    .limit(1)
     .maybeSingle();
   if (error) {
     console.error('Erreur récupération player id:', error);
@@ -73,10 +75,15 @@ export const saveVote = async (params: {
       target_player_id: targetIdNum,
     });
 
-  if (error) {
-    console.error('Erreur enregistrement vote:', error);
-    return false;
+if (error) {
+  // Ignore duplicate vote error due to unique constraint (idempotent)
+  if ((error as any).code === '23505' || (error as any).message?.toLowerCase().includes('duplicate')) {
+    console.warn('Vote déjà enregistré, on ignore.');
+    return true;
   }
+  console.error('Erreur enregistrement vote:', error);
+  return false;
+}
 
-  return true;
+return true;
 };
