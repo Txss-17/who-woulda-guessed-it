@@ -126,16 +126,18 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
     if (!gameData) return null;
 
     try {
-      // Éviter les doublons par pseudo (tolérant à la casse)
       const existingPlayers = gameData.players || [];
-      const playerExists = existingPlayers.some(
-        (p) => p.name.trim().toLowerCase() === player.name.trim().toLowerCase()
-      );
-      if (playerExists) {
-        return existingPlayers.find(
-          (p) => p.name.trim().toLowerCase() === player.name.trim().toLowerCase()
-        ) as Player;
-      }
+      // Si la session a déjà un ID joueur DB présent dans la partie, on le réutilise (évite la réinsertion au rafraîchissement)
+      try {
+        const stored = sessionStorage.getItem('playerData');
+        const sessionId = stored ? JSON.parse(stored).id : undefined;
+        if (sessionId) {
+          const existingById = existingPlayers.find((p) => String(p.id) === String(sessionId));
+          if (existingById) {
+            return existingById;
+          }
+        }
+      } catch (_) {}
 
       const { data, error } = await supabase
         .from('game_players')
