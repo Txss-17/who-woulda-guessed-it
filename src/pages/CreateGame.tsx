@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -11,19 +11,23 @@ import { Blob, BackgroundDecoration } from '@/components/DecorativeElements';
 import { useRealtimeGameSync } from '@/hooks/useRealtimeGameSync';
 
 const CreateGame = () => {
-  const { gameCode } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   
   const [hostName, setHostName] = useState('');
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [code] = useState<string>(() => {
+    const fromQuery = new URLSearchParams(location.search).get('code');
+    return (fromQuery || Math.random().toString(36).substring(2, 8).toUpperCase());
+  });
 
-  const { gameData, createGame } = useRealtimeGameSync(gameCode || null);
+  const { gameData, createGame } = useRealtimeGameSync(code);
   const gameCreated = !!gameData;
 
-  const gameUrl = `${window.location.origin}/join/${gameCode}`;
+  const gameUrl = `${window.location.origin}/join/${code}`;
 
   useEffect(() => {
     if (gameData) {
@@ -49,7 +53,8 @@ const CreateGame = () => {
     setIsCreating(true);
 
     try {
-      const questions = [
+      const pending = sessionStorage.getItem('pendingQuestions');
+      const questions = pending ? JSON.parse(pending) : [
         "Qui est le plus susceptible de dormir au boulot?",
         "Qui est le plus susceptible d'oublier l'anniversaire de son/sa partenaire?",
         "Qui est le plus susceptible de devenir célèbre sur TikTok?",
@@ -58,7 +63,7 @@ const CreateGame = () => {
       ];
 
       // Créer la partie avec Supabase
-      const game = await createGame(gameCode!, hostName.trim(), questions);
+      const game = await createGame(code, hostName.trim(), questions);
       
       if (!game) {
         throw new Error('Impossible de créer la partie');
@@ -74,6 +79,7 @@ const CreateGame = () => {
 
       // Stocker les données du joueur
       sessionStorage.setItem('playerData', JSON.stringify(hostPlayer));
+      sessionStorage.removeItem('pendingQuestions');
       
       toast({
         title: "Partie créée !",
@@ -82,7 +88,7 @@ const CreateGame = () => {
 
       // Rediriger vers la salle d'attente après un court délai
       setTimeout(() => {
-        navigate(`/waiting-room/${gameCode}`);
+        navigate(`/waiting-room/${code}`);
       }, 2000);
 
     } catch (error) {
@@ -97,7 +103,7 @@ const CreateGame = () => {
   };
 
   const copyGameCode = () => {
-    navigator.clipboard.writeText(gameCode || '');
+    navigator.clipboard.writeText(code || '');
     toast({
       title: "Code copié !",
       description: "Le code de la partie a été copié dans le presse-papiers"
@@ -131,7 +137,7 @@ const CreateGame = () => {
 
           {showQR ? (
             <div className="mb-6">
-              <QRCodeDisplay gameCode={gameCode || ''} />
+              <QRCodeDisplay gameCode={code || ''} />
               <div className="flex justify-center mt-4">
                 <Button 
                   variant="outline" 
@@ -149,7 +155,7 @@ const CreateGame = () => {
               <div className="text-center mb-6">
                 <div className="inline-flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full mb-4">
                   <span className="font-bold">Code:</span>
-                  <span className="text-2xl text-primary font-bold tracking-wider">{gameCode}</span>
+                     <span className="text-2xl text-primary font-bold tracking-wider">{code}</span>
                 </div>
                 
                 <div className="flex gap-2 justify-center mb-4">
@@ -162,13 +168,9 @@ const CreateGame = () => {
                 </div>
 
                 <div className="flex gap-2 justify-center">
-                  <Button onClick={() => setShowQR(true)} variant="ghost" size="sm">
-                    <QrCode className="h-4 w-4 mr-1" /> 
-                    Afficher QR Code
-                  </Button>
-                  <Button onClick={() => setIsShareOpen(true)} variant="ghost" size="sm">
-                    <Share2 className="h-4 w-4 mr-1" /> Partager
-                  </Button>
+                   <Button onClick={() => setIsShareOpen(true)} variant="ghost" size="sm">
+                     <Share2 className="h-4 w-4 mr-1" /> Partager
+                   </Button>
                 </div>
               </div>
             </Card>
@@ -176,7 +178,7 @@ const CreateGame = () => {
 
           <div className="flex gap-2 justify-center">
             <Button 
-              onClick={() => navigate(`/waiting-room/${gameCode}`)}
+              onClick={() => navigate(`/waiting-room/${code}`)}
               className="gap-2"
             >
               Aller en salle d'attente
@@ -187,8 +189,8 @@ const CreateGame = () => {
         <ShareGameDialog
           open={isShareOpen}
           onOpenChange={setIsShareOpen}
-          gameCode={gameCode || ''}
-          gameData={gameData || { gameCode, players: [], questions: [] }}
+          gameCode={code || ''}
+          gameData={gameData || { gameCode: code, players: [], questions: [] }}
         />
       </div>
     );
@@ -216,7 +218,7 @@ const CreateGame = () => {
             <h1 className="text-2xl font-bold mb-2">Créer une partie</h1>
             <div className="inline-flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-full">
               <span className="font-bold">Code:</span>
-              <span className="text-xl text-primary font-bold tracking-wider">{gameCode}</span>
+               <span className="text-xl text-primary font-bold tracking-wider">{code}</span>
             </div>
           </div>
           

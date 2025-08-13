@@ -24,7 +24,7 @@ const ShareGameDialog = ({ open, onOpenChange, gameCode, gameData }: ShareGameDi
   const { toast } = useToast();
   const [showQR, setShowQR] = useState(false);
   
-  const shareUrl = `${window.location.origin}/join-quick/${gameCode}`;
+  const shareUrl = `${window.location.origin}/join/${gameCode}`;
   
   const copyLink = () => {
     navigator.clipboard.writeText(shareUrl);
