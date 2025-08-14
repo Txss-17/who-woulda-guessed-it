@@ -93,6 +93,8 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
 
   const createGame = async (code: string, hostName: string, questions: string[]) => {
     try {
+      console.log('Création de la partie avec le code:', code, 'et hôte:', hostName);
+      
       const { data, error } = await supabase
         .from('parties')
         .insert({
@@ -114,7 +116,14 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
 
       if (!data) return null;
 
+      console.log('Partie créée avec succès:', data);
+
+      // Charger la partie avec ses joueurs
       const mapped = await loadGame(code);
+      if (mapped) {
+        setGameData(mapped);
+      }
+      
       return mapped;
     } catch (error) {
       console.error('Erreur lors de la création de la partie:', error);
@@ -134,11 +143,20 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
         if (sessionId) {
           const existingById = existingPlayers.find((p) => String(p.id) === String(sessionId));
           if (existingById) {
+            console.log('Joueur déjà présent, réutilisation:', existingById);
             return existingById;
           }
         }
       } catch (_) {}
 
+      // Vérifier par nom pour éviter les doublons
+      const existingByName = existingPlayers.find((p) => p.name === player.name);
+      if (existingByName) {
+        console.log('Joueur avec ce nom déjà présent:', existingByName);
+        return existingByName;
+      }
+
+      console.log('Ajout d\'un nouveau joueur:', player.name);
       const { data, error } = await supabase
         .from('game_players')
         .insert({
@@ -165,17 +183,10 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
           )}&background=10b981&color=fff`,
       };
 
-      // Mettre à jour l'état local
-      setGameData({ ...gameData, players: [...existingPlayers, created] });
+      console.log('Joueur créé avec succès:', created);
 
-      // Synchroniser la session avec l'ID DB du joueur
-      try {
-        const stored = sessionStorage.getItem('playerData');
-        const parsed = stored ? JSON.parse(stored) : {};
-        sessionStorage.setItem('playerData', JSON.stringify({ ...parsed, ...created }));
-      } catch (e) {
-        // Ignorer erreurs de parsing
-      }
+      // Mettre à jour l'état local immédiatement
+      setGameData({ ...gameData, players: [...existingPlayers, created] });
 
       return created;
     } catch (error) {
