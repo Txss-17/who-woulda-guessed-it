@@ -6,8 +6,8 @@ import PlayerAvatar from '@/components/PlayerAvatar';
 import { useToast } from '@/hooks/use-toast';
 import { Clock, Users, MessageSquare, Play } from 'lucide-react';
 import MessagingDialog from '@/components/messaging/MessagingDialog';
-import { Player, UserStatus } from '@/types/onlineGame';
-import { useRealtimeGameSync } from '@/hooks/useRealtimeGameSync';
+import { Player, UserStatus } from '@/types/quickGame';
+import { useRealtimeGameSync } from '@/hooks/useRealtimeQuickGameSync';
 import { useGameSync } from '@/hooks/useGameSync';
 import { updateGameData } from '@/integrations/supabase/updateGameData';
 
@@ -19,7 +19,7 @@ const WaitingRoom = () => {
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isMessagingOpen, setIsMessagingOpen] = useState(false);
 
-  const { gameData, isHost, addPlayerToGame } = useRealtimeGameSync(gameCode || null);
+  const { gameData, isHost, addPlayerToGame } = useRealtimeQuickGameSync(gameCode || null);
   const players = gameData?.players || [];
 
   // 1. Créer le joueur si nécessaire
