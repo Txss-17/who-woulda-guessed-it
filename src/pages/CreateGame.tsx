@@ -69,8 +69,6 @@ const CreateGame = () => {
         throw new Error('Impossible de créer la partie');
       }
 
-      console.log('Partie créée, ajout de l\'hôte:', hostName.trim());
-
       // Créer les données du joueur hôte
       const hostPlayer = {
         id: Date.now().toString(),
@@ -79,7 +77,7 @@ const CreateGame = () => {
         avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(hostName.trim())}&background=6366f1&color=fff`
       };
 
-      // Stocker les données du joueur hôte
+      // Stocker les données du joueur
       sessionStorage.setItem('playerData', JSON.stringify(hostPlayer));
       sessionStorage.removeItem('pendingQuestions');
       
