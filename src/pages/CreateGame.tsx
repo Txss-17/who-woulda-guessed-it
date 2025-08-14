@@ -86,10 +86,8 @@ const CreateGame = () => {
         description: "Partage le code avec tes amis pour qu'ils rejoignent"
       });
 
-      // Rediriger vers la salle d'attente après un court délai
-      setTimeout(() => {
-        navigate(`/waiting-room/${code}`);
-      }, 2000);
+      // Rediriger vers la salle d'attente immédiatement
+      navigate(`/waiting-room/${code}`);
 
     } catch (error) {
       toast({
