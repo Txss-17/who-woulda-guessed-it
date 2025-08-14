@@ -50,13 +50,23 @@ const WaitingRoom = () => {
     if (!currentPlayer || !gameData) return;
 
     const run = async () => {
-      const playerExists = gameData.players.some((p: Player) => p.id === currentPlayer.id);
+      console.log('Vérification si le joueur est déjà dans la partie:', currentPlayer.name);
+      const playerExists = gameData.players.some((p: Player) => 
+        String(p.id) === String(currentPlayer.id) || p.name === currentPlayer.name
+      );
+      
       if (!playerExists) {
+        console.log('Le joueur n\'est pas dans la partie, ajout en cours...');
         const created = await addPlayerToGame(currentPlayer);
         if (created) {
+          console.log('Joueur ajouté avec succès:', created);
           sessionStorage.setItem('playerData', JSON.stringify(created));
           setCurrentPlayer(created);
+        } else {
+          console.error('Échec de l\'ajout du joueur');
         }
+      } else {
+        console.log('Le joueur est déjà dans la partie');
       }
 
       if (gameData?.status === 'playing') {
