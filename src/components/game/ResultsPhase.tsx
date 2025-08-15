@@ -1,5 +1,5 @@
 
-import { Player } from '@/types/onlineGame';
+import { Player } from '@/types/quickGame';
 import PlayerAvatar from '@/components/PlayerAvatar';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';

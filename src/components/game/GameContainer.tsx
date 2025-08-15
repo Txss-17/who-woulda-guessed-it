@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Player } from '@/types/onlineGame';
+import { Player } from '@/types/quickGame';
 import Confetti from '@/components/Confetti';
 import QuestionCard from '@/components/QuestionCard';
 import MessagingDialog from '@/components/messaging/MessagingDialog';

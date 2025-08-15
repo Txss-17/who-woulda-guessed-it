@@ -1,5 +1,5 @@
 
-import { UserStatus, userStatusLabels } from '@/types/onlineGame';
+import { UserStatus, userStatusLabels } from '@/types/quickGame';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface StatusIndicatorProps {
@@ -20,8 +20,8 @@ const StatusIndicator = ({
   };
   
   const statusColors = {
-    online: 'bg-green-500',
-    offline: 'bg-gray-400',
+    onroom: 'bg-green-500',
+    offroom: 'bg-gray-400',
     away: 'bg-yellow-400'
   };
 

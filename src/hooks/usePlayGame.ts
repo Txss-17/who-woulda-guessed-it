@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Player } from '@/types/onlineGame';
+import { Player } from '@/types/quickGame';
 import { useRealtimeRounds } from '@/hooks/useRealtimeRounds';
 import { updateGameData } from '@/integrations/supabase/updateGameData';
 
@@ -36,7 +36,7 @@ export const usePlayGame = () => {
       const playerData = JSON.parse(playerDataStr);
       setCurrentPlayer({
         ...playerData,
-        status: 'online'
+        status: 'onroom' as const
       });
     }
 

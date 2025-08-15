@@ -1,7 +1,20 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { OnlineGame, Player } from '@/types/onlineGame';
+import { Player } from '@/types/quickGame';
+
+interface OnlineGame {
+  id: string;
+  name: string;
+  players: {
+    count: number;
+    max: number;
+    list: Player[];
+  };
+  host: string;
+  type: any;
+  status: 'waiting' | 'playing';
+}
 
 export const useGameList = () => {
   const [isLoading, setIsLoading] = useState(true);

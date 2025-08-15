@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Clock, Users, MessageSquare, Play } from 'lucide-react';
 import MessagingDialog from '@/components/messaging/MessagingDialog';
 import { Player, UserStatus } from '@/types/quickGame';
-import { useRealtimeGameSync } from '@/hooks/useRealtimeQuickGameSync';
+import { useRealtimeQuickGameSync } from '@/hooks/useRealtimeQuickGameSync';
 import { useGameSync } from '@/hooks/useGameSync';
 import { updateGameData } from '@/integrations/supabase/updateGameData';
 
@@ -30,7 +30,7 @@ const WaitingRoom = () => {
       const temporaryPlayer = {
         id: Date.now().toString(),
         name: `Joueur_${Date.now().toString().slice(-4)}`,
-        status: 'online' as UserStatus,
+        status: 'onroom' as UserStatus,
         avatar: `https://ui-avatars.com/api/?name=Joueur&background=10b981&color=fff`
       };
       sessionStorage.setItem('playerData', JSON.stringify(temporaryPlayer));
@@ -40,7 +40,7 @@ const WaitingRoom = () => {
     const playerData = JSON.parse(playerDataStr);
     const currentPlayerWithStatus: Player = {
       ...playerData,
-      status: 'online' as UserStatus,
+      status: 'onroom' as UserStatus,
     };
     setCurrentPlayer(currentPlayerWithStatus);
   }, []);

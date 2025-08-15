@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePlayGame } from '@/hooks/usePlayGame';
 import { useRealtimeRounds } from '@/hooks/useRealtimeRounds';
-import { Player } from '@/types/onlineGame';
+import { Player } from '@/types/quickGame';
 import GameContainer from '@/components/game/GameContainer';
 import GameResult from '@/components/game/GameResult';
 

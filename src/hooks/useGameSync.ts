@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Player } from '@/types/onlineGame';
+import { Player } from '@/types/quickGame';
 
 interface GameData {
   gameCode: string | null;

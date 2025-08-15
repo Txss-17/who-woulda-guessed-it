@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Player } from '@/types/onlineGame';
+import { Player } from '@/types/quickGame';
 import PlayerAvatar from '@/components/PlayerAvatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';

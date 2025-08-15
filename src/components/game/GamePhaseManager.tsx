@@ -1,5 +1,5 @@
 
-import { Player } from '@/types/onlineGame';
+import { Player } from '@/types/quickGame';
 import { useGameVotes } from '@/hooks/useGameVotes';
 import VotingPhase from '@/components/game/VotingPhase';
 import ResultsPhase from '@/components/game/ResultsPhase';

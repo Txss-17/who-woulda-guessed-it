@@ -1,7 +1,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import StatusIndicator from './user/StatusIndicator';
-import { UserStatus } from '@/types/onlineGame';
+import { UserStatus } from '@/types/quickGame';
 
 interface PlayerAvatarProps {
   name: string;

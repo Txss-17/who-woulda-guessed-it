@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Player } from '@/types/onlineGame';
+import { Player } from '@/types/quickGame';
 
 interface UseGameVotesProps {
   players: Player[];

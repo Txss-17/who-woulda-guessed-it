@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Player } from '@/types/onlineGame';
+import { Player } from '@/types/quickGame';
 
 interface UseRealtimeVotesParams {
   gameCode?: string;

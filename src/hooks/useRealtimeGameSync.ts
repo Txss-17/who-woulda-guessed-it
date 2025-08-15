@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Player } from '@/types/onlineGame';
+import { Player } from '@/types/quickGame';
 
 interface DatabaseGame {
   id: number;
@@ -35,7 +35,7 @@ const mapPlayers = (rows: any[]): Player[] => {
   return (rows || []).map((r) => ({
     id: String(r.id),
     name: r.pseudo_temporaire || 'Joueur',
-    status: 'online',
+    status: 'onroom' as const,
     avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(r.pseudo_temporaire || 'Joueur')}&background=10b981&color=fff`
   }));
 };
@@ -175,7 +175,7 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
       const created: Player = {
         id: String((data as any).id),
         name: (data as any).pseudo_temporaire || player.name,
-        status: 'online',
+        status: 'onroom' as const,
         avatar:
           player.avatar ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(

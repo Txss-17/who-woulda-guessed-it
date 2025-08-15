@@ -1,4 +1,4 @@
-import { Player } from '@/types/onlineGame';
+import { Player } from '@/types/quickGame';
 import PlayerAvatar from '@/components/PlayerAvatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -117,7 +117,7 @@ const FinalResults = ({ players, gameResults, onFinish }: FinalResultsProps) => 
                             name={vote.playerName}
                             size="sm"
                             highlighted={isWinner}
-                            status={player?.status || 'offline'}
+                            status={player?.status || 'offroom'}
                           />
                           <div className="flex-1">
                             <span className="font-medium">{vote.playerName}</span>

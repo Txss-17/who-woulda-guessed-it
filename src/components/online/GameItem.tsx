@@ -3,7 +3,20 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { OnlineGame, typeLabels } from '@/types/onlineGame';
+import { typeLabels } from '@/types/quickGame';
+
+interface OnlineGame {
+  id: string;
+  name: string;
+  players: {
+    count: number;
+    max: number;
+    list: any[];
+  };
+  host: string;
+  type: any;
+  status: 'waiting' | 'playing';
+}
 import { Users, Clock, Share2, Sparkles } from 'lucide-react';
 import ShareOnlineGameDialog from './ShareOnlineGameDialog';
 
