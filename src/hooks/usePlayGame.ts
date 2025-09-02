@@ -3,8 +3,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@/types/quickGame';
-import { useRealtimeRounds } from '@/hooks/useRealtimeRounds';
-import { updateGameData } from '@/integrations/supabase/updateGameData';
+import { useGameState } from '@/hooks/useGameState';
+import { usePartyQuestions } from '@/hooks/usePartyQuestions';
+import { useRealtimeGameSync } from '@/hooks/useRealtimeGameSync';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GameData {
   gameCode: string;
@@ -24,11 +26,17 @@ export const usePlayGame = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [gameData, setGameData] = useState<GameData | null>(null);
-  const { currentQuestionIndex, goToNextQuestion } = useRealtimeRounds(gameCode, 0);
-  const [gameOver, setGameOver] = useState(false);
+  // Utiliser les nouveaux hooks Supabase
+  const { gameData: realtimeGameData, isLoading: gameLoading } = useRealtimeGameSync(gameCode || null);
+  const { gameState, updateGameState } = useGameState(realtimeGameData?.id || null);
+  const { questions } = usePartyQuestions(realtimeGameData?.id || null);
+  
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [gameResults, setGameResults] = useState<QuestionResult[]>([]);
+  
+  // Utiliser l'index de question depuis game_state
+  const currentQuestionIndex = gameState?.current_question_index || 0;
+  const gameOver = gameState?.current_phase === 'finished';
   
   useEffect(() => {
     const playerDataStr = sessionStorage.getItem('playerData');
@@ -40,13 +48,11 @@ export const usePlayGame = () => {
       });
     }
 
-    const storedGameData = sessionStorage.getItem('gameData');
-    if (storedGameData) {
-      const data = JSON.parse(storedGameData);
-      const playerExists = data.players.some((p: Player) => p.id === JSON.parse(playerDataStr || '{}').id);
-      if (playerExists) {
-        setGameData(data);
-      } else {
+    // Vérifier si le joueur fait partie de cette partie
+    if (realtimeGameData && playerDataStr) {
+      const playerData = JSON.parse(playerDataStr);
+      const playerExists = realtimeGameData.players.some((p: Player) => p.id === playerData.id);
+      if (!playerExists) {
         toast({
           title: "Erreur",
           description: "Vous ne faites pas partie de cette partie",
@@ -54,33 +60,35 @@ export const usePlayGame = () => {
         });
         navigate('/');
       }
-    } else {
-      toast({
-        title: "Erreur",
-        description: "Données de jeu non trouvées",
-        variant: "destructive"
-      });
-      navigate('/');
     }
-  }, [navigate, toast]);
+  }, [realtimeGameData, navigate, toast]);
 
-  const nextQuestion = (questionResult?: QuestionResult) => {
-    if (!gameData) return;
+  const nextQuestion = async (questionResult?: QuestionResult) => {
+    if (!gameState || !realtimeGameData) return;
     
     // Ajouter le résultat de la question actuelle s'il est fourni
     if (questionResult) {
       setGameResults(prev => [...prev, questionResult]);
     }
     
-    if (currentQuestionIndex < gameData.questions.length - 1) {
-      goToNextQuestion();
+    if (currentQuestionIndex < questions.length - 1) {
+      // Passer à la question suivante
+      await updateGameState({
+        current_question_index: currentQuestionIndex + 1,
+        current_phase: 'voting',
+        phase_start_time: new Date().toISOString()
+      });
     } else {
       // Fin de partie
-      setGameOver(true);
-      // Marquer la partie comme terminée côté serveur
-      if (gameCode) {
-        updateGameData(gameCode, { statut: 'finished' }).catch(console.error);
-      }
+      await updateGameState({
+        current_phase: 'finished'
+      });
+      
+      // Marquer la partie comme terminée
+      await supabase
+        .from('parties')
+        .update({ statut: 'finished' })
+        .eq('id', realtimeGameData.id);
 
       const gameHistory = JSON.parse(sessionStorage.getItem('gameHistory') || '[]');
       const finalResults = questionResult ? [...gameResults, questionResult] : gameResults;
@@ -91,9 +99,9 @@ export const usePlayGame = () => {
           gameId: gameCode,
           date: new Date().toISOString(),
           gameType: "friendly",
-          playerCount: gameData.players.length,
+          playerCount: realtimeGameData.players.length,
           questions: finalResults,
-          totalQuestions: gameData.questions.length
+          totalQuestions: questions.length
         }
       ];
       sessionStorage.setItem('gameHistory', JSON.stringify(newGameHistory));
@@ -102,12 +110,19 @@ export const usePlayGame = () => {
   };
 
   return {
-    gameData,
+    gameData: realtimeGameData ? {
+      gameCode: realtimeGameData.code,
+      players: realtimeGameData.players,
+      questions: questions.map(q => q.question_text),
+      aiGenerated: true
+    } : null,
+    gameId: realtimeGameData?.id,
     currentQuestionIndex,
     gameOver,
     currentPlayer,
     gameCode,
     gameResults,
-    nextQuestion
+    nextQuestion,
+    isLoading: gameLoading
   };
 };

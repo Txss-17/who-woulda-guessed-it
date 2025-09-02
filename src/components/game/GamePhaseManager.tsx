@@ -13,6 +13,7 @@ interface GamePhaseManagerProps {
   currentPlayer: Player;
   currentQuestionIndex: number;
   gameCode?: string;
+  gameId?: number;
   onNextQuestion: (questionResult?: any) => void;
 }
 
@@ -22,6 +23,7 @@ const GamePhaseManager = ({
   currentPlayer, 
   currentQuestionIndex,
   gameCode,
+  gameId,
   onNextQuestion 
 }: GamePhaseManagerProps) => {
   const {
@@ -78,9 +80,11 @@ const GamePhaseManager = ({
     return (
       <VotingPhase 
         players={players}
-        selectedPlayer={selectedPlayer}
-        handleVote={handleVote}
-        confirmVote={handleConfirmVote}
+        currentPlayer={currentPlayer}
+        question={currentQuestion}
+        gameId={gameId || 1}
+        questionIndex={currentQuestionIndex}
+        onVoteSubmitted={() => startChallengePhase()}
       />
     );
   }

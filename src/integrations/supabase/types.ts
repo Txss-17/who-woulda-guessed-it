@@ -280,6 +280,47 @@ export type Database = {
           },
         ]
       }
+      game_state: {
+        Row: {
+          created_at: string
+          current_phase: string
+          current_question_index: number
+          id: string
+          party_id: number
+          phase_start_time: string | null
+          total_questions: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_phase?: string
+          current_question_index?: number
+          id?: string
+          party_id: number
+          phase_start_time?: string | null
+          total_questions?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_phase?: string
+          current_question_index?: number
+          id?: string
+          party_id?: number
+          phase_start_time?: string | null
+          total_questions?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_state_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: true
+            referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leaderboards: {
         Row: {
           category: string
@@ -539,6 +580,38 @@ export type Database = {
           },
           {
             foreignKeyName: "party_invitations_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      party_questions: {
+        Row: {
+          created_at: string
+          id: string
+          party_id: number
+          question_index: number
+          question_text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          party_id: number
+          question_index: number
+          question_text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          party_id?: number
+          question_index?: number
+          question_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "party_questions_party_id_fkey"
             columns: ["party_id"]
             isOneToOne: false
             referencedRelation: "parties"

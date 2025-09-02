@@ -9,6 +9,7 @@ import GamePhaseManager from '@/components/game/GamePhaseManager';
 
 interface GameContainerProps {
   gameCode: string | undefined;
+  gameId?: number;
   players: Player[];
   currentPlayer: Player;
   currentQuestion: string;
@@ -20,6 +21,7 @@ interface GameContainerProps {
 
 const GameContainer = ({
   gameCode,
+  gameId,
   players,
   currentPlayer,
   currentQuestion,
@@ -55,6 +57,7 @@ const GameContainer = ({
           currentPlayer={currentPlayer}
           currentQuestionIndex={currentQuestionIndex}
           gameCode={gameCode}
+          gameId={gameId}
           onNextQuestion={onNextQuestion}
         />
       </div>

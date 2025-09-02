@@ -12,11 +12,13 @@ const PlayGame = () => {
   const [localPlayer, setLocalPlayer] = useState<Player | null>(null); 
   const {
     gameData,
+    gameId,
     currentQuestionIndex,
     gameOver,
     currentPlayer: hookPlayer,
     gameCode: gameCodeFromHook,
-    nextQuestion
+    nextQuestion,
+    isLoading
   } = usePlayGame();
 
   const { currentQuestionIndex: syncedIndex, goToNextQuestion } = useRealtimeRounds(gameCode, currentQuestionIndex);
@@ -39,7 +41,7 @@ const PlayGame = () => {
   console.log("gameData", gameData);
   console.log("currentPlayer", currentPlayer);
 
-  if (!gameData || !currentPlayer) {
+  if (isLoading || !gameData || !currentPlayer) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Chargement du jeu...</p>
@@ -56,13 +58,14 @@ const PlayGame = () => {
   return (
     <GameContainer
       gameCode={gameCode}
+      gameId={gameId}
       players={gameData.players}
       currentPlayer={currentPlayer}
       currentQuestion={currentQuestion}
       currentQuestionIndex={displayIndex}
       totalQuestions={gameData.questions.length}
       aiGenerated={gameData.aiGenerated}
-      onNextQuestion={() => { nextQuestion(); goToNextQuestion(); }}
+      onNextQuestion={() => { nextQuestion(); }}
     />
   );
 };

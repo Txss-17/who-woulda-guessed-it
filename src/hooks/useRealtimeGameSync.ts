@@ -118,6 +118,37 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
 
       console.log('Partie créée avec succès:', data);
 
+      // Ajouter les questions à la partie
+      if (questions.length > 0) {
+        const questionsToInsert = questions.map((text, index) => ({
+          party_id: (data as any).id,
+          question_text: text,
+          question_index: index
+        }));
+
+        const { error: questionsError } = await supabase
+          .from('party_questions')
+          .insert(questionsToInsert);
+
+        if (questionsError) {
+          console.error('Erreur ajout questions:', questionsError);
+        }
+
+        // Créer l'état de jeu initial
+        const { error: gameStateError } = await supabase
+          .from('game_state')
+          .insert({
+            party_id: (data as any).id,
+            current_question_index: 0,
+            current_phase: 'waiting',
+            total_questions: questions.length
+          });
+
+        if (gameStateError) {
+          console.error('Erreur création game_state:', gameStateError);
+        }
+      }
+
       // Charger la partie avec ses joueurs
       const mapped = await loadGame(code);
       if (mapped) {
