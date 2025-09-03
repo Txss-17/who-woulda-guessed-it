@@ -6,26 +6,60 @@ import { Card } from '@/components/ui/card';
 import { ChevronLeft, Plus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BackgroundDecoration, Blob } from '@/components/DecorativeElements';
-import { QuestionsProvider, useQuestions } from '@/context/QuestionsContext';
-import QuestionForm from '@/components/questions/QuestionForm';
-import QuestionList from '@/components/questions/QuestionList';
-import { CustomQuestion } from '@/types/questions';
+import { useCustomQuestions, CustomQuestion } from '@/hooks/useCustomQuestions';
+import CustomQuestionForm from '@/components/questions/CustomQuestionForm';
+import CustomQuestionList from '@/components/questions/CustomQuestionList';
+import { useAuth } from '@/hooks/useAuth';
 
 const CreateQuestionsContent = () => {
   const navigate = useNavigate();
-  const { questions, addQuestion, updateQuestion, deleteQuestion } = useQuestions();
+  const { user } = useAuth();
+  const { 
+    questions, 
+    loading, 
+    createQuestion, 
+    updateQuestion, 
+    deleteQuestion 
+  } = useCustomQuestions();
   
   const [activeTab, setActiveTab] = useState('create');
   const [editingQuestion, setEditingQuestion] = useState<CustomQuestion | null>(null);
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4">
+        <div className="container mx-auto max-w-4xl">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/')}
+            className="mb-6"
+          >
+            <ChevronLeft className="mr-2 h-4 w-4" /> Retour
+          </Button>
+          
+          <Card className="p-8 text-center">
+            <h2 className="text-xl font-bold mb-4">Connexion requise</h2>
+            <p className="text-muted-foreground mb-6">
+              Vous devez être connecté pour créer et gérer vos questions personnalisées.
+            </p>
+            <Button onClick={() => navigate('/auth')}>
+              Se connecter
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
   
-  const handleCreateQuestion = (question: { text: string; visibility: 'public' | 'private' }) => {
-    addQuestion(question.text, question.visibility);
+  const handleCreateQuestion = async (question: { contenu: string; isPublic: boolean; typeJeu: string }) => {
+    await createQuestion(question.contenu, question.isPublic, question.typeJeu);
   };
   
-  const handleUpdateQuestion = (question: { text: string; visibility: 'public' | 'private' }) => {
+  const handleUpdateQuestion = async (question: { contenu: string; isPublic: boolean; typeJeu: string }) => {
     if (!editingQuestion) return;
-    updateQuestion(editingQuestion.id, question.text, question.visibility);
+    await updateQuestion(editingQuestion.id, question.contenu, question.isPublic);
     setEditingQuestion(null);
+    setActiveTab('my-questions');
   };
   
   const handleEditQuestion = (question: CustomQuestion) => {
@@ -33,8 +67,8 @@ const CreateQuestionsContent = () => {
     setActiveTab('create');
   };
   
-  const handleDeleteQuestion = (id: string) => {
-    deleteQuestion(id);
+  const handleDeleteQuestion = async (id: number) => {
+    await deleteQuestion(id);
     
     if (editingQuestion?.id === id) {
       setEditingQuestion(null);
@@ -66,27 +100,24 @@ const CreateQuestionsContent = () => {
           
           <TabsContent value="create" className="mt-4">
             <Card className="p-6">
-              <QuestionForm 
+              <CustomQuestionForm 
                 editingQuestion={editingQuestion}
                 onSave={editingQuestion ? handleUpdateQuestion : handleCreateQuestion}
-                onCancel={() => setEditingQuestion(null)}
+                onCancel={() => {
+                  setEditingQuestion(null);
+                  setActiveTab('my-questions');
+                }}
               />
             </Card>
           </TabsContent>
           
           <TabsContent value="my-questions" className="mt-4">
             <Card className="p-6">
-              <h2 className="text-xl font-bold mb-4">Mes questions ({questions.length})</h2>
-              
-              <QuestionList 
-                questions={questions} 
-                onEdit={handleEditQuestion}
-                onDelete={handleDeleteQuestion}
-              />
-              
-              <div className="mt-6 flex justify-center">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold">
+                  Mes questions ({questions.length})
+                </h2>
                 <Button 
-                  variant="outline"
                   onClick={() => {
                     setActiveTab('create');
                     setEditingQuestion(null);
@@ -94,9 +125,21 @@ const CreateQuestionsContent = () => {
                   className="flex gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  Créer une question
+                  Nouvelle question
                 </Button>
               </div>
+              
+              {loading ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Chargement...</p>
+                </div>
+              ) : (
+                <CustomQuestionList 
+                  questions={questions} 
+                  onEdit={handleEditQuestion}
+                  onDelete={handleDeleteQuestion}
+                />
+              )}
             </Card>
           </TabsContent>
         </Tabs>
@@ -105,11 +148,6 @@ const CreateQuestionsContent = () => {
   );
 };
 
-// Wrapper component that provides the questions context
-const CreateQuestions = () => (
-  <QuestionsProvider>
-    <CreateQuestionsContent />
-  </QuestionsProvider>
-);
+const CreateQuestions = () => <CreateQuestionsContent />;
 
 export default CreateQuestions;
