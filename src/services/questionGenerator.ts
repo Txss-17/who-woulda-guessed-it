@@ -1,12 +1,7 @@
 
-export type QuestionType = 'classic' | 'love' | 'friendly' | 'crazy' | 'party' | 'dirty';
+import { supabase } from '@/integrations/supabase/client';
 
-interface Question {
-  id: string;
-  text: string;
-}
-
-const defaultQuestions = {
+const PRESET_QUESTIONS = {
   classic: [
     "tomber amoureux au premier regard",
     "écrire des poèmes d'amour",
@@ -57,9 +52,9 @@ const defaultQuestions = {
     "perdre ses clés en soirée",
     "finir la soirée dans un fast-food"
   ],
-  dirty: [
+  spicy: [
     "coucher au premier rendez-vous",
-    "faire l'amour dans un milieu public",
+    "faire l'amour dans un lieu public",
     "avoir eu un plan à trois ou d'en vouloir un",
     "envoyer des nudes sans y réfléchir",
     "avoir déjà eu une sex tape",
@@ -69,38 +64,40 @@ const defaultQuestions = {
   ],
 };
 
-export const getPredefinedQuestions = (): Question[] => {
-  const allQuestions: string[] = [];
-  Object.values(defaultQuestions).forEach(questions => {
-    allQuestions.push(...questions);
-  });
-  
-  return allQuestions.map((text, index) => ({
-    id: `predefined_${index}`,
-    text: text
-  }));
-};
-
 export const generateQuestions = async (
-  gameType: QuestionType,
-  playerCount: number,
-  difficulty: 'easy' | 'medium' | 'hard' = 'medium'
-): Promise<Question[]> => {
-  // Pour l'instant, retourner des questions par défaut
-  // À remplacer par un appel à l'API IA quand disponible
-  
-  const questions = defaultQuestions[gameType] || defaultQuestions.friendly;
-  
-  // Mélanger et retourner le nombre de questions demandé
-  const shuffled = [...questions].sort(() => Math.random() - 0.5);
-  const selectedQuestions = shuffled.slice(0, Math.min(playerCount * 2, shuffled.length));
-  
-  return selectedQuestions.map((text, index) => ({
-    id: `ai_${gameType}_${index}`,
-    text: text
-  }));
-};
-
-export const validateQuestionContent = (content: string): boolean => {
-  return content.trim().length >= 10 && content.trim().length <= 500;
+  gameType: string, 
+  playerNames: string[], 
+  questionCount: number = 10,
+  includeCustomQuestions: boolean = true
+): Promise<string[]> => {
+  try {
+    let allQuestions: string[] = [];
+    
+    // Récupérer les questions de la base de données
+    if (includeCustomQuestions) {
+      const { data: dbQuestions } = await supabase
+        .from('questions')
+        .select('contenu')
+        .eq('type_jeu', gameType)
+        .eq('is_public', true);
+      
+      if (dbQuestions) {
+        allQuestions.push(...dbQuestions.map(q => q.contenu));
+      }
+    }
+    
+    // Ajouter les questions prédéfinies
+    const presetQuestions = PRESET_QUESTIONS[gameType as keyof typeof PRESET_QUESTIONS] || PRESET_QUESTIONS.friendly;
+    allQuestions.push(...presetQuestions);
+    
+    // Mélanger et retourner le nombre demandé
+    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, questionCount);
+  } catch (error) {
+    console.error('Erreur lors de la génération des questions:', error);
+    // Fallback sur les questions prédéfinies
+    const questions = PRESET_QUESTIONS[gameType as keyof typeof PRESET_QUESTIONS] || PRESET_QUESTIONS.friendly;
+    const shuffled = [...questions].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, questionCount);
+  }
 };

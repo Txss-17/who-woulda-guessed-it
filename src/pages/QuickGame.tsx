@@ -3,11 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChevronLeft, Play, Check, Sparkles, RefreshCw } from 'lucide-react';
-import { 
-  QuestionType, 
-  generateQuestions, 
-  getPredefinedQuestions 
-} from '@/services/questionGenerator';
+import { generateQuestions } from '@/services/questionGenerator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -17,21 +13,23 @@ interface Question {
   text: string;
 }
 
+const gameTypes = [
+  { value: 'friendly', label: 'Amical' },
+  { value: 'love', label: 'Amour' },
+  { value: 'spicy', label: 'Pimenté' },
+  { value: 'crazy', label: 'Délirant' },
+  { value: 'party', label: 'Fête' },
+  { value: 'classic', label: 'Classique' }
+];
+
 const QuickGame = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [questions, setQuestions] = useState<Question[]>(getPredefinedQuestions());
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
   const [questionSource, setQuestionSource] = useState<'predefined' | 'ai'>('predefined');
-  const [questionType, setQuestionType] = useState<QuestionType>('classic');
+  const [questionType, setQuestionType] = useState<string>('friendly');
   const [isGenerating, setIsGenerating] = useState(false);
-
-  // Initialiser les questions sélectionnées par défaut
-  useEffect(() => {
-    if (questionSource === 'predefined') {
-      setSelectedQuestions(questions.slice(0, 5).map(q => q.id));
-    }
-  }, [questionSource, questions]);
 
   const toggleQuestion = (questionId: string) => {
     if (selectedQuestions.includes(questionId)) {
@@ -44,13 +42,17 @@ const QuickGame = () => {
   const generateAIQuestions = async () => {
     try {
       setIsGenerating(true);
-      const aiQuestions = await generateQuestions(questionType, 10);
-      setQuestions(aiQuestions);
-      setSelectedQuestions(aiQuestions.slice(0, 6).map(q => q.id));
+      const generatedQuestions = await generateQuestions(questionType, [], 10);
+      const formattedQuestions: Question[] = generatedQuestions.map((text, index) => ({
+        id: `ai_${questionType}_${index}`,
+        text
+      }));
+      setQuestions(formattedQuestions);
+      setSelectedQuestions(formattedQuestions.slice(0, 6).map(q => q.id));
 
       toast({
         title: "Questions générées",
-        description: `5 questions de type "${questionType}" ont été sélectionnées automatiquement`,
+        description: `${formattedQuestions.length} questions de type "${questionType}" ont été générées`,
       });
     } catch (error) {
       toast({
@@ -61,6 +63,20 @@ const QuickGame = () => {
       console.error("Erreur de génération:", error);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const loadPredefinedQuestions = async () => {
+    try {
+      const generatedQuestions = await generateQuestions('friendly', [], 10);
+      const formattedQuestions: Question[] = generatedQuestions.map((text, index) => ({
+        id: `predefined_${index}`,
+        text
+      }));
+      setQuestions(formattedQuestions);
+      setSelectedQuestions(formattedQuestions.slice(0, 5).map(q => q.id));
+    } catch (error) {
+      console.error("Erreur lors du chargement des questions:", error);
     }
   };
 
@@ -80,23 +96,25 @@ const QuickGame = () => {
 
     const newGameCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    // On ne crée pas les joueurs ici. Seul l'hôte choisira son nom
-    // sur l’écran suivant et les autres joueurs rejoindront via code/QR/lien
     sessionStorage.setItem('pendingQuestions', JSON.stringify(selectedQuestionTexts));
     sessionStorage.setItem('pendingGameCode', newGameCode);
 
     navigate(`/create-game?code=${newGameCode}`);
   };
 
-  // Effet pour charger les questions AI quand on change le type
+  // Effet pour charger les questions selon la source
   useEffect(() => {
     if (questionSource === 'ai') {
       generateAIQuestions();
     } else {
-      setQuestions(getPredefinedQuestions());
-      setSelectedQuestions(getPredefinedQuestions().slice(0, 6).map(q => q.id));
+      loadPredefinedQuestions();
     }
   }, [questionSource, questionType]);
+
+  // Initialisation
+  useEffect(() => {
+    loadPredefinedQuestions();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-6 px-4">
@@ -152,19 +170,14 @@ const QuickGame = () => {
                   <div className="mb-4">
                     <h3 className="text-sm font-medium mb-2">Type de questions</h3>
                     <div className="flex flex-wrap gap-2">
-                      {(['classic', 'love', 'friendly', 'crazy', 'party', 'dirty'] as QuestionType[]).map((type) => (
+                      {gameTypes.map((type) => (
                         <Badge 
-                          key={type}
-                          variant={questionType === type ? "default" : "outline"}
+                          key={type.value}
+                          variant={questionType === type.value ? "default" : "outline"}
                           className="cursor-pointer"
-                          onClick={() => setQuestionType(type)}
+                          onClick={() => setQuestionType(type.value)}
                         >
-                          {type === 'classic' ? 'Classique' : 
-                           type === 'love' ? 'Amour' :
-                           type === 'friendly' ? 'Amitié' :
-                           type === 'crazy' ? 'Folie' : 
-                           type === 'party' ? 'Fête' :
-                           type === 'dirty' ? 'dirty' : type}
+                          {type.label}
                         </Badge>
                       ))}
                     </div>

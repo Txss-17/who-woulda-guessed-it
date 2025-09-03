@@ -673,6 +673,7 @@ export type Database = {
           categorie_id: number | null
           contenu: string
           contenu_sensible: boolean | null
+          created_at: string | null
           cree_par_ia: boolean
           cree_par_user_id: string | null
           id: number
@@ -686,6 +687,7 @@ export type Database = {
           categorie_id?: number | null
           contenu: string
           contenu_sensible?: boolean | null
+          created_at?: string | null
           cree_par_ia: boolean
           cree_par_user_id?: string | null
           id?: never
@@ -699,6 +701,7 @@ export type Database = {
           categorie_id?: number | null
           contenu?: string
           contenu_sensible?: boolean | null
+          created_at?: string | null
           cree_par_ia?: boolean
           cree_par_user_id?: string | null
           id?: never

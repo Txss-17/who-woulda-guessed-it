@@ -26,7 +26,7 @@ export const useCustomQuestions = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('questions')
-        .select('id, contenu, is_public, type_jeu, cree_par_user_id, categorie_id, created_at')
+        .select('id, contenu, is_public, type_jeu, cree_par_user_id, categorie_id')
         .eq('cree_par_user_id', user.id)
         .order('id', { ascending: false });
 
@@ -39,7 +39,7 @@ export const useCustomQuestions = () => {
         type_jeu: q.type_jeu,
         cree_par_user_id: q.cree_par_user_id,
         categorie_id: q.categorie_id,
-        created_at: q.created_at || new Date().toISOString()
+        created_at: new Date().toISOString() // Default value since column might not exist yet
       }));
       
       setQuestions(typedQuestions);
@@ -75,7 +75,7 @@ export const useCustomQuestions = () => {
           cree_par_user_id: user.id,
           cree_par_ia: false
         }])
-        .select('id, contenu, is_public, type_jeu, cree_par_user_id, categorie_id, created_at')
+        .select('id, contenu, is_public, type_jeu, cree_par_user_id, categorie_id')
         .single();
 
       if (error) throw error;
@@ -87,7 +87,7 @@ export const useCustomQuestions = () => {
         type_jeu: data.type_jeu,
         cree_par_user_id: data.cree_par_user_id,
         categorie_id: data.categorie_id,
-        created_at: data.created_at || new Date().toISOString()
+        created_at: new Date().toISOString()
       };
 
       setQuestions(prev => [typedQuestion, ...prev]);
@@ -116,7 +116,7 @@ export const useCustomQuestions = () => {
         .update({ contenu, is_public: isPublic })
         .eq('id', id)
         .eq('cree_par_user_id', user.id)
-        .select('id, contenu, is_public, type_jeu, cree_par_user_id, categorie_id, created_at')
+        .select('id, contenu, is_public, type_jeu, cree_par_user_id, categorie_id')
         .single();
 
       if (error) throw error;
@@ -128,7 +128,7 @@ export const useCustomQuestions = () => {
         type_jeu: data.type_jeu,
         cree_par_user_id: data.cree_par_user_id,
         categorie_id: data.categorie_id,
-        created_at: data.created_at || new Date().toISOString()
+        created_at: new Date().toISOString()
       };
 
       setQuestions(prev => prev.map(q => q.id === id ? typedQuestion : q));
