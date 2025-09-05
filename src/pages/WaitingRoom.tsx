@@ -7,8 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Clock, Users, MessageSquare, Play } from 'lucide-react';
 import MessagingDialog from '@/components/messaging/MessagingDialog';
 import { Player, UserStatus } from '@/types/quickGame';
-import { useRealtimeQuickGameSync } from '@/hooks/useRealtimeQuickGameSync';
-import { useGameSync } from '@/hooks/useGameSync';
+import { useRealtimeGameSync } from '@/hooks/useRealtimeGameSync';
 import { updateGameData } from '@/integrations/supabase/updateGameData';
 
 const WaitingRoom = () => {
@@ -19,7 +18,7 @@ const WaitingRoom = () => {
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [isMessagingOpen, setIsMessagingOpen] = useState(false);
 
-  const { gameData, isHost, addPlayerToGame } = useRealtimeQuickGameSync(gameCode || null);
+  const { gameData, isHost, addPlayerToGame, isLoading } = useRealtimeGameSync(gameCode || null);
   const players = gameData?.players || [];
 
   // 1. Créer le joueur si nécessaire
@@ -49,24 +48,46 @@ const WaitingRoom = () => {
   useEffect(() => {
     if (!currentPlayer || !gameData) return;
 
-    const run = async () => {
-      console.log('Vérification si le joueur est déjà dans la partie:', currentPlayer.name);
+  const run = async () => {
+      console.log('WaitingRoom - Vérification si le joueur est déjà dans la partie:', currentPlayer.name);
+      console.log('WaitingRoom - gameData:', gameData);
+      console.log('WaitingRoom - isLoading:', isLoading);
+
+      // Vérifier que gameData est bien chargé
+      if (!gameData) {
+        console.log('WaitingRoom - gameData non chargé, retour vers l\'accueil');
+        toast({
+          title: "Erreur de connexion",
+          description: "Impossible de charger les données de la partie",
+          variant: "destructive"
+        });
+        navigate('/');
+        return;
+      }
+      
       const playerExists = gameData.players.some((p: Player) => 
         String(p.id) === String(currentPlayer.id) || p.name === currentPlayer.name
       );
       
       if (!playerExists) {
-        console.log('Le joueur n\'est pas dans la partie, ajout en cours...');
+        console.log('WaitingRoom - Le joueur n\'est pas dans la partie, ajout en cours...');
         const created = await addPlayerToGame(currentPlayer);
         if (created) {
-          console.log('Joueur ajouté avec succès:', created);
+          console.log('WaitingRoom - Joueur ajouté avec succès:', created);
           sessionStorage.setItem('playerData', JSON.stringify(created));
           setCurrentPlayer(created);
         } else {
-          console.error('Échec de l\'ajout du joueur');
+          console.error('WaitingRoom - Échec de l\'ajout du joueur, retour vers l\'accueil');
+          toast({
+            title: "Erreur",
+            description: "Impossible de rejoindre la partie",
+            variant: "destructive"
+          });
+          navigate('/');
+          return;
         }
       } else {
-        console.log('Le joueur est déjà dans la partie');
+        console.log('WaitingRoom - Le joueur est déjà dans la partie');
       }
 
       if (gameData?.status === 'playing') {
@@ -91,13 +112,14 @@ const WaitingRoom = () => {
     navigate(`/play/${gameCode}`);
   };
 
-  if (!gameData || !currentPlayer) {
+  if (isLoading || !gameData || !currentPlayer) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-8 px-4 flex items-center justify-center">
         <Card className="p-6">
           <div className="text-center">
             <Clock className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
             <p>Chargement de la salle d'attente...</p>
+            {gameCode && <p className="text-sm text-muted-foreground mt-2">Code: {gameCode}</p>}
           </div>
         </Card>
       </div>
