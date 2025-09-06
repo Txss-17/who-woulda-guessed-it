@@ -118,6 +118,25 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
 
       console.log('Partie créée avec succès:', data);
 
+      // Ajouter immédiatement l'hôte à la partie
+      console.log('Ajout de l\'hôte à la partie:', hostName);
+      const { data: hostPlayer, error: hostError } = await supabase
+        .from('game_players')
+        .insert({
+          game_id: (data as any).id,
+          pseudo_temporaire: hostName,
+          user_id: null,
+        })
+        .select('id, pseudo_temporaire')
+        .maybeSingle();
+
+      if (hostError) {
+        console.error('Erreur lors de l\'ajout de l\'hôte:', hostError);
+        // Continuer même si l'ajout de l'hôte échoue, il sera ajouté plus tard
+      } else {
+        console.log('Hôte ajouté avec succès:', hostPlayer);
+      }
+
       // Ajouter les questions à la partie
       if (questions.length > 0) {
         const questionsToInsert = questions.map((text, index) => ({
@@ -149,10 +168,14 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
         }
       }
 
-      // Charger la partie avec ses joueurs
+      // Charger la partie avec ses joueurs (qui incluent maintenant l'hôte)
       const mapped = await loadGame(code);
       if (mapped) {
         setGameData(mapped);
+        // Marquer comme hôte si c'est le premier joueur
+        if (mapped.players && mapped.players.length > 0) {
+          setIsHost(true);
+        }
       }
       
       return mapped;

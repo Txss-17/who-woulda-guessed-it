@@ -62,22 +62,36 @@ const CreateGame = () => {
         "Qui est le plus susceptible d'adopter 10 chats?"
       ];
 
-      // Créer la partie avec Supabase
+      // Créer la partie avec Supabase (inclut maintenant l'ajout de l'hôte)
       const game = await createGame(code, hostName.trim(), questions);
       
       if (!game) {
         throw new Error('Impossible de créer la partie');
       }
 
-      console.log('Partie créée, ajout de l\'hôte:', hostName.trim());
+      console.log('Partie créée avec hôte ajouté:', hostName.trim());
 
-      // Créer les données du joueur hôte
-      const hostPlayer = {
-        id: Date.now().toString(),
-        name: hostName.trim(),
-        status: 'online' as const,
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(hostName.trim())}&background=6366f1&color=fff`
-      };
+      // Créer les données du joueur hôte pour la session (compatible avec l'ID DB)
+      // L'hôte est maintenant présent dans game.players, on utilise ses données
+      let hostPlayer;
+      if (game.players && game.players.length > 0) {
+        // Utiliser les données de l'hôte depuis la DB
+        const dbHostPlayer = game.players[0];
+        hostPlayer = {
+          id: dbHostPlayer.id, // ID de la base de données
+          name: dbHostPlayer.name,
+          status: 'online' as const,
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(dbHostPlayer.name)}&background=6366f1&color=fff`
+        };
+      } else {
+        // Fallback au cas où les données ne sont pas encore synchronisées
+        hostPlayer = {
+          id: Date.now().toString(),
+          name: hostName.trim(),
+          status: 'online' as const,
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(hostName.trim())}&background=6366f1&color=fff`
+        };
+      }
 
       // Stocker les données du joueur hôte
       sessionStorage.setItem('playerData', JSON.stringify(hostPlayer));
@@ -88,7 +102,7 @@ const CreateGame = () => {
         description: "Partage le code avec tes amis pour qu'ils rejoignent"
       });
 
-      // Rediriger vers la salle d'attente immédiatement
+      // Rediriger vers la salle d'attente
       navigate(`/waiting-room/${code}`);
 
     } catch (error) {

@@ -48,10 +48,11 @@ const WaitingRoom = () => {
   useEffect(() => {
     if (!currentPlayer || !gameData) return;
 
-  const run = async () => {
+    const run = async () => {
       console.log('WaitingRoom - Vérification si le joueur est déjà dans la partie:', currentPlayer.name);
       console.log('WaitingRoom - gameData:', gameData);
       console.log('WaitingRoom - isLoading:', isLoading);
+      console.log('WaitingRoom - isHost:', isHost);
 
       // Vérifier que gameData est bien chargé
       if (!gameData) {
@@ -65,6 +66,7 @@ const WaitingRoom = () => {
         return;
       }
       
+      // Vérifier si le joueur existe déjà dans la partie
       const playerExists = gameData.players.some((p: Player) => 
         String(p.id) === String(currentPlayer.id) || p.name === currentPlayer.name
       );
@@ -88,15 +90,26 @@ const WaitingRoom = () => {
         }
       } else {
         console.log('WaitingRoom - Le joueur est déjà dans la partie');
+        
+        // Si le joueur existe mais a un ID différent (par exemple hôte créé avec timestamp),
+        // mettre à jour avec l'ID de la base de données
+        const existingPlayer = gameData.players.find((p: Player) => p.name === currentPlayer.name);
+        if (existingPlayer && String(existingPlayer.id) !== String(currentPlayer.id)) {
+          console.log('WaitingRoom - Mise à jour ID joueur avec ID base de données');
+          const updatedPlayer = { ...currentPlayer, id: existingPlayer.id };
+          sessionStorage.setItem('playerData', JSON.stringify(updatedPlayer));
+          setCurrentPlayer(updatedPlayer);
+        }
       }
 
+      // Vérifier si la partie a commencé
       if (gameData?.status === 'playing') {
         navigate(`/play/${gameCode}`);
       }
     };
 
     run();
-  }, [currentPlayer, gameData]);
+  }, [currentPlayer, gameData, isHost]);
 
   const startGame = async () => {
     if (players.length < 2) {
