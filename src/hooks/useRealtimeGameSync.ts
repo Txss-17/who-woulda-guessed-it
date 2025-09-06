@@ -91,7 +91,7 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
     }
   };
 
-  const createGame = async (code: string, hostName: string, questions: string[]) => {
+  const createGame = async (code: string, hostName: string, questions: string[], hostPlayerId?: string) => {
     try {
       console.log('Création de la partie avec le code:', code, 'et hôte:', hostName);
       
@@ -118,16 +118,16 @@ export const useRealtimeGameSync = (gameCode: string | null) => {
 
       console.log('Partie créée avec succès:', data);
 
-      // Ajouter immédiatement l'hôte à la partie
-      console.log('Ajout de l\'hôte à la partie:', hostName);
+      // Ajouter immédiatement l'hôte à la partie avec son ID
+      console.log('Ajout de l\'hôte à la partie:', hostName, 'avec ID:', hostPlayerId);
       const { data: hostPlayer, error: hostError } = await supabase
         .from('game_players')
         .insert({
           game_id: (data as any).id,
           pseudo_temporaire: hostName,
-          user_id: null,
+          user_id: hostPlayerId || null,
         })
-        .select('id, pseudo_temporaire')
+        .select('id, pseudo_temporaire, user_id')
         .maybeSingle();
 
       if (hostError) {
